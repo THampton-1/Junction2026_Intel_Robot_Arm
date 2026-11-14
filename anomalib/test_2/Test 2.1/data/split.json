@@ -1,0 +1,41 @@
+{
+  "seed": 2026,
+  "method": "random.Random(seed).sample(sorted normal episodes, n_train); remainder -> test/normal",
+  "train_fraction_from_test1": "20/28",
+  "cameras": [
+    "claw_cam",
+    "side_view",
+    "top_view"
+  ],
+  "train_normal": [
+    "05",
+    "06",
+    "08",
+    "09",
+    "13",
+    "14",
+    "15",
+    "16",
+    "19",
+    "21",
+    "22",
+    "23",
+    "24"
+  ],
+  "test_normal": [
+    "00",
+    "01",
+    "02",
+    "07",
+    "20"
+  ],
+  "test_abnormal": [
+    "03",
+    "04",
+    "10",
+    "11",
+    "12",
+    "17",
+    "18"
+  ]
+}
