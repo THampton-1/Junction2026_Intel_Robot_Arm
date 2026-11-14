@@ -6,9 +6,9 @@ These frames are intended for validating and benchmarking Anomalib (e.g. PatchCo
 
 ## Folder Structure
 
-* **`claw_cam/`**: 25 starting frames from the wrist-mounted claw camera (320x240 RGB).
-* **`top_view/`**: 25 starting frames from the overhead RealSense camera (640x480 RGB).
-* **`side_view/`**: 25 starting frames from the tabletop side webcam (320x240 RGB).
+* **`Test 2.1/claw_cam/`**: 25 starting frames from the wrist-mounted claw camera (320x240 RGB).
+* **`Test 2.1/top_view/`**: 25 starting frames from the overhead RealSense camera (640x480 RGB).
+* **`Test 2.1/side_view/`**: 25 starting frames from the tabletop side webcam (320x240 RGB).
 * **`screenshots/`**: UI and setup captures recorded during Test 2 configuration.
 
 ## Dataset Characteristics
