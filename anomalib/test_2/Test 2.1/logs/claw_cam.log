@@ -1,0 +1,171 @@
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\timm\models\layers\__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+21:04:47 | INFO    | =================================================================
+21:04:47 | INFO    |   ANOMALIB PATCHCORE TRAINING & EVALUATION PIPELINE
+21:04:47 | INFO    | =================================================================
+21:04:47 | INFO    | Feature Extraction:  CPU (Fast multi-core feature aggregation)
+21:04:47 | INFO    | Target OpenVINO Acc: Intel Xe3 iGPU (CPU)
+21:04:47 | INFO    | Dataset Root:        anomalib\test_2\Test 2.1\data\claw_cam
+21:04:47 | INFO    | Backbone:            wide_resnet50_2
+21:04:47 | INFO    | Coreset Ratio:       0.2
+21:04:47 | INFO    | Num Neighbors:       9
+21:04:47 | INFO    | OpenVINO Export Dir: C:\Users\theoh\anomalib_runs\test_2.1\claw_cam\export
+21:04:47 | INFO    | Setting up Claw Cam dataset...
+21:04:47 | INFO    | Dataset loaded: 13 train normal, 12 test total
+21:04:47 | INFO    | Initializing PatchCore model with wide_resnet50_2 backbone...
+21:04:47 | INFO    | Initializing Patchcore model.
+21:04:50 | INFO    | Loading pretrained weights from Hugging Face hub (timm/wide_resnet50_2.racm_in1k)
+21:04:51 | INFO    | HTTP Request: HEAD https://huggingface.co/timm/wide_resnet50_2.racm_in1k/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+21:04:51 | WARNING | Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+21:04:51 | INFO    | [timm/wide_resnet50_2.racm_in1k] Safe alternative available for 'pytorch_model.bin' (as 'model.safetensors'). Loading weights using safetensors.
+21:04:52 | INFO    | Missing keys (fc.weight, fc.bias) discovered while loading pretrained weights. This is expected if model is being adapted.
+21:04:52 | INFO    | Starting memory bank construction...
+21:04:52 | INFO    | GPU available: False, used: False
+21:04:52 | INFO    | TPU available: False, using: 0 TPU cores
+21:04:52 | INFO    | \U0001f4a1 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\lightning\pytorch\core\optimizer.py:183: `LightningModule.configure_optimizers` returned `None`, this fit will run with no optimizer
++--------------------------------------------------------------+
+|   | Name           | Type           | Params | Mode  | FLOPs |
+|---+----------------+----------------+--------+-------+-------|
+| 0 | pre_processor  | PreProcessor   |      0 | train |     0 |
+| 1 | post_processor | PostProcessor  |      0 | train |     0 |
+| 2 | evaluator      | Evaluator      |      0 | train |     0 |
+| 3 | model          | PatchcoreModel | 24.9 M | train |     0 |
++--------------------------------------------------------------+
+Trainable params: 24.9 M                                                       
+Non-trainable params: 0                                                        
+Total params: 24.9 M                                                           
+Total estimated model params size (MB): 99.450                                 
+Modules in train mode: 19                                                      
+Modules in eval mode: 174                                                      
+Total FLOPs: 0                                                                 
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\lightning\pytorch\utilities\_pytree.py:21: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\lightning\pytorch\trainer\connectors\data_connector.py:429: Consider setting `persistent_workers=True` in 'train_dataloader' to speed up the dataloader worker initialization.
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\lightning\pytorch\trainer\connectors\data_connector.py:429: Consider setting `persistent_workers=True` in 'val_dataloader' to speed up the dataloader worker initialization.
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\lightning\pytorch\loops\fit_loop.py:538: Found 174 module(s) in eval mode at the start of training. This may lead to unexpected behavior during training. If this is intentional, you can ignore this warning.
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\timm\models\layers\__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\timm\models\layers\__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+21:05:15 | INFO    | Aggregating the embedding extracted from the training set.
+21:05:15 | INFO    | Applying core-set subsampling to get the embedding.
+Selecting Coreset Indices.:   0%|          | 0/2038 [00:00<?, ?it/s]Selecting Coreset Indices.:   2%|2         | 48/2038 [00:00<00:04, 470.05it/s]Selecting Coreset Indices.:   5%|4         | 97/2038 [00:00<00:04, 475.76it/s]Selecting Coreset Indices.:   8%|7         | 155/2038 [00:00<00:03, 521.34it/s]Selecting Coreset Indices.:  11%|#         | 218/2038 [00:00<00:03, 561.63it/s]Selecting Coreset Indices.:  14%|#3        | 280/2038 [00:00<00:03, 580.24it/s]Selecting Coreset Indices.:  17%|#6        | 343/2038 [00:00<00:02, 596.94it/s]Selecting Coreset Indices.:  20%|#9        | 406/2038 [00:00<00:02, 606.39it/s]Selecting Coreset Indices.:  23%|##2       | 467/2038 [00:00<00:02, 600.12it/s]Selecting Coreset Indices.:  26%|##5       | 528/2038 [00:00<00:02, 554.33it/s]Selecting Coreset Indices.:  29%|##8       | 585/2038 [00:01<00:02, 548.51it/s]Selecting Coreset Indices.:  32%|###1      | 646/2038 [00:01<00:02, 565.23it/s]Selecting Coreset Indices.:  34%|###4      | 703/2038 [00:01<00:02, 558.15it/s]Selecting Coreset Indices.:  37%|###7      | 761/2038 [00:01<00:02, 562.83it/s]Selecting Coreset Indices.:  40%|####      | 823/2038 [00:01<00:02, 575.61it/s]Selecting Coreset Indices.:  43%|####3     | 882/2038 [00:01<00:01, 579.45it/s]Selecting Coreset Indices.:  46%|####6     | 941/2038 [00:01<00:01, 581.69it/s]Selecting Coreset Indices.:  49%|####9     | 1000/2038 [00:01<00:01, 581.71it/s]Selecting Coreset Indices.:  52%|#####1    | 1059/2038 [00:01<00:01, 583.57it/s]Selecting Coreset Indices.:  55%|#####4    | 1118/2038 [00:01<00:01, 578.58it/s]Selecting Coreset Indices.:  58%|#####7    | 1179/2038 [00:02<00:01, 586.35it/s]Selecting Coreset Indices.:  61%|######    | 1238/2038 [00:02<00:01, 583.87it/s]Selecting Coreset Indices.:  64%|######3   | 1297/2038 [00:02<00:01, 583.20it/s]Selecting Coreset Indices.:  67%|######6   | 1356/2038 [00:02<00:01, 585.08it/s]Selecting Coreset Indices.:  69%|######9   | 1415/2038 [00:02<00:01, 571.37it/s]Selecting Coreset Indices.:  72%|#######2  | 1476/2038 [00:02<00:00, 580.69it/s]Selecting Coreset Indices.:  75%|#######5  | 1535/2038 [00:02<00:00, 582.93it/s]Selecting Coreset Indices.:  78%|#######8  | 1595/2038 [00:02<00:00, 585.42it/s]Selecting Coreset Indices.:  81%|########1 | 1654/2038 [00:02<00:00, 580.36it/s]Selecting Coreset Indices.:  84%|########4 | 1713/2038 [00:02<00:00, 561.28it/s]Selecting Coreset Indices.:  87%|########6 | 1770/2038 [00:03<00:00, 556.85it/s]Selecting Coreset Indices.:  90%|########9 | 1826/2038 [00:03<00:00, 553.67it/s]Selecting Coreset Indices.:  92%|#########2| 1882/2038 [00:03<00:00, 537.57it/s]Selecting Coreset Indices.:  95%|#########4| 1936/2038 [00:03<00:00, 507.54it/s]Selecting Coreset Indices.:  98%|#########7| 1988/2038 [00:03<00:00, 507.15it/s]Selecting Coreset Indices.: 100%|##########| 2038/2038 [00:03<00:00, 562.27it/s]
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\timm\models\layers\__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\timm\models\layers\__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+21:05:38 | INFO    | `Trainer.fit` stopped: `max_epochs=1` reached.
+21:05:42 | INFO    | Training took 50.36 seconds
+Epoch 0/0  ----------------------------------- 2/2 0:00:22 • 0:00:00 1.99it/s 
+21:05:42 | INFO    | PatchCore memory bank built in 50.52 seconds!
+21:05:42 | INFO    | Running evaluation on test set (8 Normal, 16 Abnormal)...
+21:05:42 | INFO    | The following callbacks returned in `LightningModule.configure_callbacks` will override existing callbacks passed to Trainer: Evaluator, PostProcessor, PreProcessor
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\lightning\pytorch\trainer\connectors\data_connector.py:429: Consider setting `persistent_workers=True` in 'test_dataloader' to speed up the dataloader worker initialization.
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\timm\models\layers\__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\timm\models\layers\__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\torchmetrics\utilities\prints.py:43: UserWarning: The ``compute`` method of metric AUROC was called before the ``update`` method which may lead to errors, as metric states have not yet been updated.
+  warnings.warn(*args, **kwargs)
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\torchmetrics\utilities\prints.py:43: UserWarning: The ``compute`` method of metric F1Score was called before the ``update`` method which may lead to errors, as metric states have not yet been updated.
+  warnings.warn(*args, **kwargs)
+21:06:07 | INFO    | Testing took 24.33161234855652 seconds
+Throughput (batch_size=8) : 0.493185565678795 FPS
++-------------------------------------------------------+
+|        Test metric        |       DataLoader 0        |
+|---------------------------+---------------------------|
+|        image_AUROC        |    0.9428571462631226     |
+|       image_F1Score       |    0.8571428656578064     |
++-------------------------------------------------------+
+Testing -------------------------------------- 2/2 0:00:01 • 0:00:00 2.16it/s 
+21:06:10 | INFO    | Test set evaluation completed in 27.57 seconds.
+21:06:10 | INFO    | Test Results Summary: [{'image_AUROC': 0.9428571462631226, 'image_F1Score': 0.8571428656578064}]
+21:06:10 | INFO    | Predicting detailed anomaly scores across test samples...
+21:06:10 | WARNING | ckpt_path is not provided. Model weights will not be loaded.
+21:06:10 | INFO    | The following callbacks returned in `LightningModule.configure_callbacks` will override existing callbacks passed to Trainer: Evaluator, PostProcessor, PreProcessor
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\lightning\pytorch\trainer\connectors\data_connector.py:429: Consider setting `persistent_workers=True` in 'predict_dataloader' to speed up the dataloader worker initialization.
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\timm\models\layers\__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\timm\models\layers\__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+Predicting ----------------------------------- 2/2 0:00:01 • 0:00:00 1.94it/s 
+21:06:35 | INFO    | ---------------------------------------------------------------------------
+21:06:35 | INFO    | IMAGE NAME                LABEL        PRED         ANOMALY SCORE  
+21:06:35 | INFO    | ---------------------------------------------------------------------------
+21:06:35 | INFO    | green_v2_ep03_Big.png     Abnormal     Abnormal     0.9885         
+21:06:35 | INFO    | green_v2_ep04_Big.png     Abnormal     Abnormal     0.9095         
+21:06:35 | INFO    | green_v2_ep10_Big.png     Abnormal     Abnormal     0.9289         
+21:06:35 | INFO    | green_v2_ep11_Big.png     Abnormal     Abnormal     0.9671         
+21:06:35 | INFO    | green_v2_ep12_Big.png     Abnormal     Normal       0.5000         
+21:06:35 | INFO    | green_v2_ep17_Big.png     Abnormal     Abnormal     0.6702         
+21:06:35 | INFO    | green_v2_ep18_Big.png     Abnormal     Abnormal     1.0000         
+21:06:35 | INFO    | green_v2_ep00.png         Normal       Normal       0.2847         
+21:06:35 | INFO    | green_v2_ep01.png         Normal       Normal       0.2528         
+21:06:35 | INFO    | green_v2_ep02.png         Normal       Abnormal     0.8244         
+21:06:35 | INFO    | green_v2_ep07.png         Normal       Normal       0.0329         
+21:06:35 | INFO    | green_v2_ep20.png         Normal       Normal       0.0795         
+21:06:35 | INFO    | ---------------------------------------------------------------------------
+21:06:35 | INFO    | NORMAL SCORES   (Small Blocks, N=5):  min=0.0329, mean=0.2949, max=0.8244
+21:06:35 | INFO    | ABNORMAL SCORES (Big Blocks,   N=7): min=0.5000, mean=0.8520, max=1.0000
+21:06:35 | INFO    | SEPARATION GAP (Abnormal Min - Normal Max): -0.3244
+21:06:35 | INFO    | RECOMMENDED THRESHOLD:                     0.6622
+21:06:35 | WARNING | Overlap detected between classes (Margin: -0.3244).
+21:06:35 | INFO    | Exporting PatchCore model to OpenVINO IR...
+C:\Users\theoh\Documents\Claude\Junction\Junction2026_Intel_Robot_Arm\scripts\train_anomalib_patchcore.py:26: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+  return _orig_onnx_export(*args, **kwargs)
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\torch\onnx\_internal\torchscript_exporter\utils.py:1511: UserWarning: Provided key output for dynamic axes is not a valid input/output name
+  _validate_dynamic_axes(dynamic_axes, model, input_names, output_names)
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\data\transforms\center_crop.py:83: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if image.numel() == 0:
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\data\transforms\center_crop.py:87: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if crop_height > image_height or crop_width > image_width:
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\data\transforms\center_crop.py:57: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  crop_top = torch.tensor((image_height - crop_height) / 2.0).round().int().item()
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\data\transforms\center_crop.py:57: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.detach().clone() or sourceTensor.detach().clone().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  crop_top = torch.tensor((image_height - crop_height) / 2.0).round().int().item()
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\data\transforms\center_crop.py:57: TracerWarning: Converting a tensor to a Python number might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  crop_top = torch.tensor((image_height - crop_height) / 2.0).round().int().item()
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\data\transforms\center_crop.py:58: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  crop_left = torch.tensor((image_width - crop_width) / 2.0).round().int().item()
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\data\transforms\center_crop.py:58: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.detach().clone() or sourceTensor.detach().clone().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  crop_left = torch.tensor((image_width - crop_width) / 2.0).round().int().item()
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\data\transforms\center_crop.py:58: TracerWarning: Converting a tensor to a Python number might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  crop_left = torch.tensor((image_width - crop_width) / 2.0).round().int().item()
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\models\image\patchcore\torch_model.py:378: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  n_neighbors=min(self.num_neighbors, memory_bank_effective_size),
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\post_processing\post_processor.py:209: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  pred_score = predictions.pred_score or torch.amax(predictions.anomaly_map, dim=(-2, -1))
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\post_processing\post_processor.py:325: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if not self._image_threshold.isnan():
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\post_processing\post_processor.py:311: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if preds is None or norm_min.isnan() or norm_max.isnan():
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\post_processing\post_processor.py:313: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if threshold.isnan():
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\post_processing\post_processor.py:338: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if not self._pixel_threshold.isnan():
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\post_processing\post_processor.py:349: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  return torch.tensor(1.0) - self.image_sensitivity
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\post_processing\post_processor.py:289: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  if preds is None or threshold.isnan():
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\anomalib\post_processing\post_processor.py:358: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  return torch.tensor(1.0) - self.pixel_sensitivity
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\torch\onnx\_internal\torchscript_exporter\symbolic_opset11.py:955: UserWarning: Exporting aten::index operator of advanced indexing in opset 14 is achieved by combination of multiple ONNX operators, including Reshape, Transpose, Concat, and Gather. If indices include negative values, the exported graph will produce incorrect results.
+  return opset9.index(g, self, index)
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\torch\onnx\_internal\torchscript_exporter\jit_utils.py:308: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\jit\passes\onnx\constant_fold.cpp:180.)
+  _C._jit_pass_onnx_node_shape_type_inference(node, params_dict, opset_version)
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\torch\onnx\_internal\torchscript_exporter\utils.py:712: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\jit\passes\onnx\constant_fold.cpp:180.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+C:\Users\theoh\venvs\anomalib-env\Lib\site-packages\torch\onnx\_internal\torchscript_exporter\utils.py:1185: UserWarning: Constant folding - Only steps=1 can be constant folded for opset >= 10 onnx::Slice op. Constant folding not applied. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\jit\passes\onnx\constant_fold.cpp:180.)
+  _C._jit_pass_onnx_graph_shape_type_inference(
+21:06:39 | INFO    | Exported model to C:\Users\theoh\anomalib_runs\test_2.1\claw_cam\export\weights\openvino\patchcore_claw.xml
+21:06:39 | INFO    | OpenVINO IR successfully exported to: C:\Users\theoh\anomalib_runs\test_2.1\claw_cam\export\weights\openvino\patchcore_claw.xml
+21:06:39 | INFO    | Benchmarking OpenVINO runtime inference on Intel hardware...
+21:06:40 | INFO    | OpenVINO Available Devices: ['CPU', 'GPU', 'NPU']
+21:06:40 | INFO    | Loading OpenVINO model from: C:\Users\theoh\anomalib_runs\test_2.1\claw_cam\export\weights\openvino\patchcore_claw.xml
+21:06:40 | INFO    | Compiling OpenVINO model for device: GPU (Intel Core Ultra Xe3)
+21:07:37 | INFO    | OpenVINO (GPU) Latency: Mean = 84.53 ms | P95 = 90.22 ms
+21:07:37 | INFO    | SUCCESS: Anomalib PatchCore ready for live closed-loop gate!
+21:07:37 | INFO    | =================================================================
+21:07:37 | INFO    |   TRAINING, EVALUATION & EXPORT COMPLETE
+21:07:37 | INFO    | =================================================================
