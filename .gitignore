@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large model checkpoints and binary weights (keep in local /home/intel/models)
+*.ckpt
+*.safetensors
+*.bin
+*.onnx
+*.tar.gz
+*.zip
+*.pt
+
+# Virtual environments
+.venv/
+env/
+venv/
+anomalib-env/
+
+# Lightning & training logs / cache
+results/
+lightning_logs/
+.cache/
+wandb/
