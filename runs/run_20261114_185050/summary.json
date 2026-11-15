@@ -1,0 +1,24 @@
+{
+  "run_timestamp": "20261114_185050",
+  "total_cycle_time_seconds": 2.8751865640078904,
+  "inspection_result": {
+    "is_defective": true,
+    "max_score": 0.7001953125,
+    "decision_threshold": 0.4781,
+    "per_side_scores": [
+      0.6005859375,
+      0.7001953125,
+      0.6328125,
+      0.65625
+    ],
+    "inference_latencies_ms": [
+      55.37405800714623,
+      55.10150700865779,
+      45.37263899692334,
+      39.281359990127385
+    ],
+    "total_ai_latency_ms": 195.12956400285475,
+    "device_used": "NPU",
+    "timestamp": "2026-11-14T18:50:52.429404"
+  }
+}

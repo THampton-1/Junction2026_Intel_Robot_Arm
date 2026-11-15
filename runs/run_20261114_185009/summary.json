@@ -1,0 +1,24 @@
+{
+  "run_timestamp": "20261114_185009",
+  "total_cycle_time_seconds": 2.7180816320033045,
+  "inspection_result": {
+    "is_defective": true,
+    "max_score": 0.78857421875,
+    "decision_threshold": 0.4781,
+    "per_side_scores": [
+      0.6142578125,
+      0.78857421875,
+      0.701171875,
+      0.65234375
+    ],
+    "inference_latencies_ms": [
+      11.705655997502618,
+      14.07719099370297,
+      9.881638005026616,
+      7.162865993450396
+    ],
+    "total_ai_latency_ms": 42.8273509896826,
+    "device_used": "GPU",
+    "timestamp": "2026-11-14T18:50:11.723703"
+  }
+}

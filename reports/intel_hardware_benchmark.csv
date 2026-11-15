@@ -1,0 +1,4 @@
+device,mean_latency_ms,median_latency_ms,p95_latency_ms,min_latency_ms,max_latency_ms,throughput_fps,power_watts,temp_celsius,thermal_headroom_c,compile_time_ms
+CPU,33.4,33.2,37.62,28.94,38.76,29.9,16.5,86.0,14.0,162.1
+GPU,4.41,3.55,8.01,2.8,10.32,226.6,16.5,60.0,40.0,333.1
+NPU,31.22,31.14,32.51,29.81,33.3,32.0,16.5,54.0,46.0,26.2

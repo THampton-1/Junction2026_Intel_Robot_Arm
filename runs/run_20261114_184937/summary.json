@@ -1,0 +1,24 @@
+{
+  "run_timestamp": "20261114_184937",
+  "total_cycle_time_seconds": 2.6941490470053395,
+  "inspection_result": {
+    "is_defective": false,
+    "max_score": 0.18,
+    "decision_threshold": 0.4781,
+    "per_side_scores": [
+      0.11,
+      0.14,
+      0.18,
+      0.15
+    ],
+    "inference_latencies_ms": [
+      0.0013495009625330567,
+      0.0013495009625330567,
+      0.0013495009625330567,
+      0.0013495009625330567
+    ],
+    "total_ai_latency_ms": 0.005398003850132227,
+    "device_used": "MOCK_CPU",
+    "timestamp": "2026-11-14T18:49:39.614269"
+  }
+}

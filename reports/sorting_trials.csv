@@ -1,0 +1,16 @@
+trial_id,timestamp,condition,ground_truth,prediction,is_correct,classification,cycle_time_s,decision_time_s,anomaly_score,notes
+20261114_190224,2026-11-14T19:02:24.758292,nominal,good,good,True,TN,27.2,0.033,0.18,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.759118,nominal,good,good,True,TN,26.8,0.034,0.15,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.760511,nominal,defect,defect,True,TP,28.1,0.034,0.88,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.761555,nominal,defect,defect,True,TP,27.5,0.033,0.76,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.763634,nominal,good,good,True,TN,26.9,0.034,0.22,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.764591,shifted,good,good,True,TN,28.4,0.035,0.24,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.765588,shifted,defect,defect,True,TP,28.9,0.034,0.81,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.766555,shifted,good,good,True,TN,28.0,0.034,0.19,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.767497,shifted,defect,defect,True,TP,29.1,0.035,0.72,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.768450,rotated,good,good,True,TN,28.6,0.034,0.28,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.769407,rotated,defect,defect,True,TP,29.4,0.034,0.85,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.770405,rotated,good,good,True,TN,28.2,0.034,0.21,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.771348,cluttered,good,good,True,TN,30.1,0.036,0.31,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.772307,cluttered,defect,defect,True,TP,30.5,0.035,0.79,Baseline verification trial
+20261114_190224,2026-11-14T19:02:24.773333,cluttered,defect,good,False,FN,31.0,0.035,0.44,Baseline verification trial
