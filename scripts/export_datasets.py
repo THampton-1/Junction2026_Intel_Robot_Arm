@@ -19,6 +19,7 @@ DATASETS = [
     ("Block_To_Green_v4", "a531500b-01d8-496e-9d3e-6bee809b38c1", "green_v4"),
     ("Block_To_Pink_v4", "80b4f232-a586-4416-a098-fb93752a6175", "pink_v4"),
     ("Block_To_Pink_v5", "821972b1-430d-46b1-82bb-0646691c85fd", "pink_v5"),
+    ("Theo_Frames_To_Crop_v2", "4e822e47-3a91-4817-9e3d-fc7e34a0625f", "theo_v2"),
 ]
 
 REPO_ROOT = Path("/home/intel/Junction")
@@ -126,7 +127,11 @@ def process_dataset(name: str, ds_id: str, prefix: str):
 
 
 def main():
+    import sys
+    target = sys.argv[1].lower() if len(sys.argv) > 1 else None
     for name, ds_id, prefix in DATASETS:
+        if target and target not in name.lower():
+            continue
         process_dataset(name, ds_id, prefix)
     print("\nAll datasets successfully exported and verified!")
 
