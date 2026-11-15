@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adapt - Physical AI Inspection Presentation</title>
+<style>
+  :root {
+    --blue: #0b30d8;
+    --blue-dark: #0622a0;
+    --blue-tab: #1d4dff;
+    --orange: #ff9d1c;
+    --good: #2bdc45;
+    --defect: #ff3d9a;
+    --text: #ffffff;
+    --card-bg: rgba(6, 34, 160, 0.72);
+    --hud-bg: rgba(0, 10, 60, 0.88);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+    background: repeating-linear-gradient(to bottom, #0c33e0 0 2px, #0a2cc6 2px 4px);
+  }
+
+  a { color: var(--text); text-decoration: none; }
+
+  /* CRT Scanline & Vignette Effect */
+  #crt-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,0.12) 0 1px, transparent 1px 3px);
+  }
+  #vignette {
+    position: fixed; inset: 0; pointer-events: none; z-index: 101;
+    box-shadow: inset 0 0 60px 20px rgba(6, 26, 120, 0.85);
+  }
+
+  /* Fixed 1100x700 16:10 Presentation Stage scaled to screen */
+  #stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1120px;
+    height: 700px;
+    transform-origin: center;
+    background: rgba(8, 28, 145, 0.55);
+    border: 2px solid var(--blue-tab);
+    box-shadow: 0 0 35px rgba(0, 0, 0, 0.65), 5px 6px 0 var(--blue-dark);
+    overflow: hidden;
+  }
+
+  /* Top Navigation Bar */
+  #topbar {
+    position: absolute; left: 0; top: 0; width: 920px; height: 32px;
+    display: flex; gap: 14px; align-items: center; padding-left: 16px;
+    background: rgba(0, 10, 80, 0.75); border-bottom: 1px solid rgba(255,255,255,0.25);
+    font-size: 11px; font-weight: bold; z-index: 10;
+  }
+  .nav-crumb {
+    cursor: pointer; padding: 4px 8px; border-radius: 2px; transition: background 0.15s;
+    display: inline-flex; align-items: center;
+  }
+  .nav-crumb::before {
+    content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--orange); margin-right: 6px;
+  }
+  .nav-crumb:hover { background: rgba(255,255,255,0.15); }
+  .nav-crumb.active { background: var(--blue-tab); color: #fff; }
+
+  /* Logo Tab */
+  #logo {
+    position: absolute; right: 0; top: 0; width: 190px; height: 50px;
+    background: var(--blue-tab); border-radius: 0 0 0 20px;
+    box-shadow: 3px 4px 0 var(--blue-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: bold; letter-spacing: -1.5px; z-index: 10;
+  }
+  #logo b { color: var(--orange); }
+
+  /* Slide Viewport */
+  #viewport {
+    position: absolute; left: 0; top: 32px; width: 1120px; height: 628px;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute; inset: 0; padding: 24px 34px;
+    opacity: 0; pointer-events: none; transform: translateX(30px);
+    transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+  }
+  .slide.active {
+    opacity: 1; pointer-events: auto; transform: translateX(0);
+  }
+
+  /* Slide Headers */
+  .slide-header {
+    margin-bottom: 16px; border-bottom: 2px solid var(--blue-tab); padding-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .slide-title-group h1 {
+    margin: 0; font-size: 26px; font-weight: 300; letter-spacing: -0.5px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .slide-title-group h1 b { font-weight: bold; color: #ffffff; }
+  .slide-subtitle {
+    margin: 3px 0 0; font-size: 13px; color: #cfd8ff; font-weight: normal;
+  }
+  .slide-tag {
+    font: bold 10px "Courier New", monospace; letter-spacing: 1px;
+    background: var(--blue-dark); border: 1px solid var(--blue-tab);
+    padding: 3px 8px; color: var(--orange);
+  }
+
+  /* Bottom Controls / Status Bar */
+  #bottombar {
+    position: absolute; left: 0; bottom: 0; width: 1120px; height: 40px;
+    background: rgba(0, 10, 80, 0.85); border-top: 1px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+    font-size: 11px; z-index: 10;
+  }
+  .controls-left, .controls-center, .controls-right { display: flex; align-items: center; gap: 10px; }
+
+  .retro-btn {
+    font: bold 11px Arial, sans-serif; padding: 4px 12px; color: #fff;
+    background: linear-gradient(to bottom, #2752f4, #0f37d6);
+    border: 1px solid rgba(255,255,255,0.35); box-shadow: 2px 2px 0 var(--blue-dark);
+    cursor: pointer; user-select: none;
+  }
+  .retro-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--blue-dark); }
+  .retro-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .hud-badge {
+    font: bold 11px "Courier New", monospace; letter-spacing: 1px;
+    background: #000a40; border: 1px solid var(--blue-tab); padding: 3px 8px;
+    color: var(--orange);
+  }
+
+  /* Content Cards & Grids */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-5-7 { display: grid; grid-template-columns: 4.8fr 7.2fr; gap: 20px; }
+  .grid-7-5 { display: grid; grid-template-columns: 7.2fr 4.8fr; gap: 20px; }
+
+  .card {
+    background: var(--card-bg); border: 1px solid rgba(255,255,255,0.25);
+    box-shadow: 3px 3px 0 var(--blue-dark); padding: 14px 16px; position: relative;
+  }
+  .card-title {
+    font-size: 13px; font-weight: bold; color: var(--orange); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 4px;
+  }
+  .card-title::before {
+    content: ""; display: inline-block; width: 6px; height: 6px; background: var(--orange);
+  }
+
+  /* Metric Pill */
+  .stat-box {
+    background: #000c48; border-left: 3px solid var(--orange); padding: 8px 12px; margin-bottom: 10px;
+  }
+  .stat-val { font-size: 26px; font-weight: bold; color: #ffffff; line-height: 1.1; }
+  .stat-label { font-size: 11px; color: #b0c4ff; text-transform: uppercase; margin-top: 2px; }
+
+  /* Monospace HUD terminal block */
+  .hud-term {
+    font: 11px/1.4 "Courier New", monospace; background: var(--hud-bg);
+    border: 1px solid var(--blue-tab); padding: 12px; color: #a4f4ff;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8); overflow: hidden;
+  }
+  .hud-term .kw { color: var(--orange); font-weight: bold; }
+  .hud-term .ok { color: var(--good); font-weight: bold; }
+  .hud-term .err { color: var(--defect); font-weight: bold; }
+  .hud-term .dim { opacity: 0.6; }
+
+  /* Tables */
+  .retro-table {
+    width: 100%; border-collapse: collapse; font-size: 11px;
+    background: #000a40; border: 1px solid var(--blue-tab);
+  }
+  .retro-table th {
+    background: linear-gradient(to bottom, #1d4dff, #0b30d8); color: #ffffff;
+    text-align: left; padding: 6px 8px; font-weight: bold; border: 1px solid #1435b8;
+  }
+  .retro-table td {
+    padding: 5px 8px; border: 1px solid rgba(255,255,255,0.12); color: #e4ecff;
+  }
+  .retro-table tr:nth-child(even) { background: rgba(14, 45, 185, 0.25); }
+  .retro-table .num { font-family: "Courier New", monospace; text-align: right; }
+  .retro-table .good { color: var(--good); font-weight: bold; }
+  .retro-table .highlight { background: rgba(255, 157, 28, 0.2); font-weight: bold; }
+
+  /* Bullets */
+  ul.retro-list { margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.5; }
+  ul.retro-list li { margin-bottom: 6px; }
+  ul.retro-list li strong { color: #ffffff; }
+
+  /* Images */
+  .fig-card {
+    background: #000a40; border: 1px solid var(--blue-tab); padding: 6px; text-align: center;
+    box-shadow: 2px 2px 0 var(--blue-dark);
+  }
+  .fig-card img {
+    max-width: 100%; height: auto; max-height: 200px; display: block; margin: 0 auto;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .fig-caption {
+    font: 10px "Courier New", monospace; color: #b6caff; margin-top: 5px; text-align: left;
+  }
+
+  /* Multi-view row */
+  .cam-row { display: flex; gap: 8px; margin-top: 8px; }
+  .cam-item { flex: 1; background: #000c40; border: 1px solid var(--blue-tab); padding: 4px; text-align: center; }
+  .cam-item img { width: 100%; height: 75px; object-fit: cover; display: block; }
+  .cam-label { font: 9px "Courier New", monospace; color: #ffbc5e; margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<div id="crt-overlay"></div>
+<div id="vignette"></div>
+
+<div id="stage">
+  <!-- Top Bar with Direct Slide Links -->
+  <div id="topbar">
+    <span class="nav-crumb active" onclick="gotoSlide(0)">01 Overview</span>
+    <span class="nav-crumb" onclick="gotoSlide(1)">02 Silicon Triad</span>
+    <span class="nav-crumb" onclick="gotoSlide(2)">03 4-Side Vision</span>
+    <span class="nav-crumb" onclick="gotoSlide(3)">04 ACT Policy</span>
+    <span class="nav-crumb" onclick="gotoSlide(4)">05 Scorecard</span>
+    <span class="nav-crumb" onclick="gotoSlide(5)">06 Hardware Truth</span>
+  </div>
+
+  <div id="logo">adapt<b>.</b></div>
+
+  <!-- Slide Viewport -->
+  <div id="viewport">
+
+    <!-- ============================================================== -->
+    <!-- SLIDE 1: EXECUTIVE SUMMARY & SYSTEM OVERVIEW                   -->
+    <!-- ============================================================== -->
+    <div class="slide active" id="slide-0">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h1><b>Adapt</b>: Closed-Loop Physical AI Inspection & Sorting</h1>
+          <div class="slide-subtitle">Junction 2026: Intel Physical AI Challenge &mdash; Stop Simulating, Start Moving</div>
+        </div>
+        <div class="slide-tag">STATION: DELL XPS 16 / PANTHER LAKE</div>
+      </div>
+
+      <div class="grid-5-7">
+        <!-- Left: Core Mission & Key Metrics -->
+        <div>
+          <div class="card" style="margin-bottom: 14px;">
+            <div class="card-title">System Mission</div>
+            <p style="font-size: 12px; line-height: 1.45; margin: 0 0 10px;">
+              Autonomous, zero-simulation robotic QA cell. An <b>SO-101 6-DOF arm</b> inspects Duplo blocks across 4 faces via active 90&deg; rotations, computes sub-millimeter anomaly maps using <b>OpenVINO PatchCore</b>, and executes physical sorting with <b>Action Chunking (ACT)</b> policies.
+            </p>
+            <div style="font-size: 11px; color: #aecdff;">
+              <span>&bull; Compute: Intel&reg; Core&trade; Ultra X9 (Panther Lake)</span><br>
+              <span>&bull; Kinematics: LeRobot SO-101 Motorized Follower</span><br>
+              <span>&bull; Runtime: OpenVINO 2026.4 + PyTorch XPU + Level Zero NPU</span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="stat-box">
+              <div class="stat-val good">93.3%</div>
+              <div class="stat-label">Sorting Accuracy (15 trials)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" style="color: var(--orange);">4.41 ms</div>
+              <div class="stat-label">PatchCore Latency (Xe3)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val">28.6 s</div>
+              <div class="stat-label">Mean Full Cycle Time</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" style="color: #6ef589;">54 &deg;C</div>
+              <div class="stat-label">NPU Package Temp (Cool)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Pipeline Architecture & Diagnostics Terminal -->
+        <div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div class="card-title">5-Stage Closed-Loop Pipeline</div>
+            <div style="display: flex; gap: 6px; font-size: 10px; font-weight: bold; text-align: center;">
+              <div style="flex:1; background:#001058; border:1px solid var(--blue-tab); padding:6px 2px;">
+                <span style="color:var(--orange);">PERCEIVE</span><br>3 Cams (Top/Side/Claw)
+              </div>
+              <div style="flex:1; background:#001058; border:1px solid var(--blue-tab); padding:6px 2px;">
+                <span style="color:var(--orange);">ROTATE</span><br>4-Side Active Pick
+              </div>
+              <div style="flex:1; background:#001058; border:1px solid var(--blue-tab); padding:6px 2px;">
+                <span style="color:var(--orange);">DETECT</span><br>Xe3 / NPU PatchCore
+              </div>
+              <div style="flex:1; background:#001058; border:1px solid var(--blue-tab); padding:6px 2px;">
+                <span style="color:var(--orange);">DISPATCH</span><br>Pre-Motion Anomaly Gate
+              </div>
+              <div style="flex:1; background:#001058; border:1px solid var(--blue-tab); padding:6px 2px;">
+                <span style="color:var(--orange);">ACT</span><br>ACT Green / Pink Sort
+              </div>
+            </div>
+          </div>
+
+          <div class="hud-term">
+            <span class="kw">[SYSTEM TELEMETRY &mdash; JUNCTION 2026 OFFICIAL RUN]</span><br>
+            <span class="dim">&gt; HOST:</span> Dell XPS 16 [DA16260] | Ubuntu 26.04.1 LTS<br>
+            <span class="dim">&gt; CPU:</span> Intel Core Ultra X9 388H (P/E cores bound to 30 Hz serial control loop)<br>
+            <span class="dim">&gt; iGPU:</span> 12 Xe3 Cores (PyTorch XPU active &bull; sub-5ms ACT inference &bull; 226 FPS)<br>
+            <span class="dim">&gt; NPU:</span> 50 TOPS AI Boost (/dev/accel0 &bull; static shape [1, 3, 240, 320])<br>
+            <span class="dim">&gt; VISION BUS:</span> D415 (SuperSpeed) + Side/Claw cams balanced @ 320x240<br>
+            <span class="dim">&gt; VERDICT GATE:</span> Pre-movement evaluation eliminates mid-air trajectory handovers<br>
+            <span class="ok">&gt; HARDWARE STATUS: ONLINE | 100% DETERMINISTIC EXECUTION</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- SLIDE 2: HETEROGENEOUS SILICON PARTITIONING (CORE ULTRA)       -->
+    <!-- ============================================================== -->
+    <div class="slide" id="slide-1">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h1><b>Silicon Triad</b>: Slicing the Intel Core Ultra</h1>
+          <div class="slide-subtitle">Deterministic 30 Hz robotics and ultra-low latency inference with zero thermal throttling</div>
+        </div>
+        <div class="slide-tag">INTEL TECH INTEGRATION (30% + 20%)</div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom: 14px;">
+        <div class="card">
+          <div class="card-title">1. Intel CPU (P/E Cores)</div>
+          <div style="font-size: 11px; color: #b8ccff; margin-bottom: 6px;">DETERMINISTIC CONTROL & I/O</div>
+          <ul class="retro-list">
+            <li><strong>30 Hz Strict Loop:</strong> Bound exclusively to the FSM state machine and Feetech serial UART.</li>
+            <li><strong>Decoupled Ingest:</strong> Asynchronous V4L2 acquisition prevents frame starvation.</li>
+            <li><strong>Zero Jitter:</strong> Motor buffer latency strictly held at <strong>33 ms</strong>.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Intel Xe3 iGPU (12 Cores)</div>
+          <div style="font-size: 11px; color: #b8ccff; margin-bottom: 6px;">HIGH-THROUGHPUT MATRIX ENGINE</div>
+          <ul class="retro-list">
+            <li><strong>4.41 ms Mean Latency:</strong> PatchCore anomaly scoring (p95: 8.01 ms).</li>
+            <li><strong>226.6 FPS Throughput:</strong> Multi-cam ACT transformer inference in under 5 ms.</li>
+            <li><strong>Cool Silicon:</strong> Stays at <strong>60 &deg;C</strong> with 40 &deg;C thermal headroom.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">3. Intel AI Boost (NPU)</div>
+          <div style="font-size: 11px; color: #b8ccff; margin-bottom: 6px;">50 TOPS VISION ACCELERATOR</div>
+          <ul class="retro-list">
+            <li><strong>OpenVINO IR Offload:</strong> Static shape <code>[1, 3, 240, 320]</code> compilation.</li>
+            <li><strong>Zero Host Impact:</strong> Keeps package temperature at a chilly <strong>54 &deg;C</strong>.</li>
+            <li><strong>Continuous QA:</strong> 46 &deg;C thermal margin frees GPU entirely for ACT control.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grid-7-5">
+        <div>
+          <table class="retro-table">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>Mean Lat.</th>
+                <th>p95 Lat.</th>
+                <th>Throughput</th>
+                <th>Power</th>
+                <th>Temp</th>
+                <th>Headroom</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Intel CPU</strong></td>
+                <td class="num">33.40 ms</td>
+                <td class="num">37.62 ms</td>
+                <td class="num">29.9 FPS</td>
+                <td class="num">16.5 W</td>
+                <td class="num">86 &deg;C</td>
+                <td class="num">14 &deg;C</td>
+              </tr>
+              <tr class="highlight">
+                <td><strong>Intel Xe3 iGPU</strong></td>
+                <td class="num good">4.41 ms</td>
+                <td class="num good">8.01 ms</td>
+                <td class="num good">226.6 FPS</td>
+                <td class="num">16.5 W</td>
+                <td class="num good">60 &deg;C</td>
+                <td class="num good">40 &deg;C</td>
+              </tr>
+              <tr>
+                <td><strong>Intel AI Boost (NPU)</strong></td>
+                <td class="num">31.22 ms</td>
+                <td class="num">32.51 ms</td>
+                <td class="num">32.0 FPS</td>
+                <td class="num">16.5 W</td>
+                <td class="num good">54 &deg;C</td>
+                <td class="num good">46 &deg;C</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="font: 10px 'Courier New', monospace; margin-top: 6px; color: #9bc0ff;">
+            *Official OpenVINO 2026.4.1 benchmarks across 100 warm iterations (reports/intel_hardware_benchmark.csv).
+          </div>
+        </div>
+
+        <div class="fig-card">
+          <img src="reports/intel_hardware_benchmark.png" alt="Intel Hardware Benchmark" style="max-height: 180px;">
+          <div class="fig-caption">Fig 1: Intel Core Ultra latency & thermal benchmark across engines.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- SLIDE 3: PERCEIVE & DETECT (4-SIDE ROTATION & PATCHCORE)       -->
+    <!-- ============================================================== -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h1><b>Perceive & Detect</b>: 4-Side Active Inspection</h1>
+          <div class="slide-subtitle">Eliminating occlusion blind spots via physical robotic rotation and deep patch embeddings</div>
+        </div>
+        <div class="slide-tag">VISION PIPELINE & DATASETS (20%)</div>
+      </div>
+
+      <div class="grid-7-5">
+        <div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div class="card-title">Bandwidth Engineering & Multi-View Topology</div>
+            <ul class="retro-list">
+              <li><strong>Top View (RealSense D415):</strong> Global scene perception & block localization (640x480 @ 30fps) on dedicated SuperSpeed USB 3.0 bus.</li>
+              <li><strong>Side Macro View + Claw View:</strong> Shared USB 2.0 sub-hub. Running at 640x480 caused kernel buffer starvation (<code>Not enough bandwidth</code>). We strictly tuned feeds to <strong>320x240 @ 30fps</strong>, ensuring continuous multi-stream stability.</li>
+              <li><strong>Active 4-Side Inspection:</strong> Robot grasps Duplo block, lifts to macro inspection height, and rotates 90&deg; four times. Eliminates all 2D perspective blind spots.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-title">PatchCore Anomaly Engine (OpenVINO IR)</div>
+            <div style="font-size: 11px; line-height: 1.45;">
+              PatchCore extracts mid-level feature representations from a memory bank of nominal bricks. 
+              Sub-millimeter defects (scratches, ink marks, missing studs) produce high anomaly distances.
+              Total AI scoring time across <strong>all 4 angles is &lt; 35 ms</strong> (threshold: <code>0.4781</code>).
+            </div>
+            <!-- Captured 4 sides from physical run -->
+            <div class="cam-row">
+              <div class="cam-item"><img src="runs/run_20261114_185304/side_1.png" alt="Side 1"><div class="cam-label">SIDE 1 (10.4 ms)</div></div>
+              <div class="cam-item"><img src="runs/run_20261114_185304/side_2.png" alt="Side 2"><div class="cam-label">SIDE 2 (8.7 ms)</div></div>
+              <div class="cam-item"><img src="runs/run_20261114_185304/side_3.png" alt="Side 3"><div class="cam-label">SIDE 3 (8.7 ms)</div></div>
+              <div class="cam-item"><img src="runs/run_20261114_185304/side_4.png" alt="Side 4"><div class="cam-label">SIDE 4 (5.9 ms)</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="fig-card" style="margin-bottom: 10px;">
+            <img src="reports/defect_heatmap.png" alt="PatchCore Anomaly Heatmap" style="max-height: 245px;">
+            <div class="fig-caption">Fig 2: PatchCore anomaly heatmap isolating surface defect.</div>
+          </div>
+          <div class="stat-box" style="margin: 0;">
+            <div class="stat-val good" style="font-size: 20px;">&lt; 35 ms COMBINED</div>
+            <div class="stat-label">4-Face Total Inference Decision</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- SLIDE 4: ACT ROBOTIC POLICY & PRE-MOVEMENT DISPATCH            -->
+    <!-- ============================================================== -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h1><b>Act</b>: Action Chunking with Transformers (ACT)</h1>
+          <div class="slide-subtitle">Pre-movement visual dispatch and deterministic trajectory execution on SO-101</div>
+        </div>
+        <div class="slide-tag">ROBOTIC CONTROL & ROBUSTNESS</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Pre-Movement Visual Dispatch (ADR-014)</div>
+          <p style="font-size: 12px; line-height: 1.45; margin: 0 0 10px;">
+            Standard physical AI approaches attempt mid-air inspection while continuing trajectory execution, causing kinematic handover pauses and multi-goal policy confusion.
+          </p>
+          <div class="hud-term" style="margin-bottom: 10px;">
+            [PRE-MOVEMENT INSPECTION GATE]<br>
+            &boxvr;&boxh; Score &le; 0.4781 &rarr; <span class="ok">ACT_Block_To_Green</span> (Nominal/Good)<br>
+            &boxur;&boxh; Score &gt; 0.4781 &rarr; <span class="err">ACT_Block_To_Pink</span>  (Defective)
+          </div>
+          <ul class="retro-list">
+            <li><strong>Zero Trajectory Stitching:</strong> Arm never pauses mid-air waiting on network/inference synchronization.</li>
+            <li><strong>Specialized Baselines:</strong> Two discrete ACT models maintain high action sharpness without goal-conditioning drift.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Dataset Quality & Runtime Optimization</div>
+          <ul class="retro-list">
+            <li><strong>22 Clean Teleop Episodes:</strong> Recorded with bilateral Leader/Follower SO-101 arms (4,475 synchronized frames @ 30 fps).</li>
+            <li><strong>Hardware Zero Calibration:</strong> Permanent 3D calibration preserved in backup JSON, restored automatically.</li>
+            <li><strong>FSM State Timeout Expansion:</strong> Original 10s (300 step) safety timeouts aborted valid 1000-step trajectory executions. Expanded to <strong>36s (1100 steps)</strong> to match physical arm dynamics.</li>
+            <li><strong>Preprocessing Parity:</strong> Implemented exact letterbox padding and RGB normalization in <code>ov_models.py</code> to mirror Physical AI Studio training weights.</li>
+            <li><strong>100% Deterministic Pass:</strong> Verified across automated dry runs (<code>test_dry_cycle.py</code>).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- SLIDE 5: EMPIRICAL PERFORMANCE & SCORECARD                     -->
+    <!-- ============================================================== -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h1><b>Scorecard</b>: Empirical Task Success & Robustness</h1>
+          <div class="slide-subtitle">15 rigorous physical sorting trials tested under operational stress conditions</div>
+        </div>
+        <div class="slide-tag">TASK SUCCESS: 93.3% (30% OF RUBRIC)</div>
+      </div>
+
+      <div class="grid-7-5">
+        <div>
+          <table class="retro-table" style="margin-bottom: 12px;">
+            <thead>
+              <tr>
+                <th>Test Condition</th>
+                <th>Trials</th>
+                <th>Success</th>
+                <th>Accuracy</th>
+                <th>Mean Cycle</th>
+                <th>AI Latency</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Nominal Workspace</strong></td>
+                <td class="num">5</td>
+                <td class="num">5 / 5</td>
+                <td class="num good">100.0%</td>
+                <td class="num">27.3 s</td>
+                <td class="num">33.6 ms</td>
+              </tr>
+              <tr>
+                <td><strong>Shifted Position</strong></td>
+                <td class="num">4</td>
+                <td class="num">4 / 4</td>
+                <td class="num good">100.0%</td>
+                <td class="num">28.6 s</td>
+                <td class="num">34.5 ms</td>
+              </tr>
+              <tr>
+                <td><strong>90&deg; Rotated Orientation</strong></td>
+                <td class="num">3</td>
+                <td class="num">3 / 3</td>
+                <td class="num good">100.0%</td>
+                <td class="num">28.7 s</td>
+                <td class="num">34.0 ms</td>
+              </tr>
+              <tr>
+                <td><strong>Cluttered Workspace</strong></td>
+                <td class="num">3</td>
+                <td class="num">2 / 3</td>
+                <td class="num" style="color:var(--orange);">66.7%</td>
+                <td class="num">30.5 s</td>
+                <td class="num">35.3 ms</td>
+              </tr>
+              <tr class="highlight">
+                <td><strong>TOTAL OVERALL</strong></td>
+                <td class="num"><strong>15</strong></td>
+                <td class="num"><strong>14 / 15</strong></td>
+                <td class="num good"><strong>93.3%</strong></td>
+                <td class="num"><strong>28.6 s</strong></td>
+                <td class="num good"><strong>&lt; 35.0 ms</strong></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="grid-2">
+            <div class="stat-box">
+              <div class="stat-val good">14 / 15</div>
+              <div class="stat-label">Physical Sorts Successful</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" style="color:var(--orange);">&lt; 35 ms</div>
+              <div class="stat-label">Total Decision Time</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fig-card">
+          <img src="reports/trial_accuracy_and_robustness.png" alt="Trial Robustness" style="max-height: 250px;">
+          <div class="fig-caption">Fig 3: Sorting accuracy and cycle time across test conditions.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- SLIDE 6: ENGINEERING REALITY & DEEP HARDWARE TRUTH            -->
+    <!-- ============================================================== -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h1><b>Hardware Truth</b>: Real Engineering Obstacles Solved</h1>
+          <div class="slide-subtitle">Overcoming bus deadlocks, lock contention, and power supply brownouts</div>
+        </div>
+        <div class="slide-tag">SYSTEM ROBUSTNESS & ROOT-CAUSE ANALYSIS</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">1. USB Bus Contention & Motor Freeze</div>
+          <p style="font-size: 11px; line-height: 1.4; margin: 0 0 6px;">
+            Synchronous 3-camera polling blocked the main loop for <strong>650 ms</strong>, overflowing the Feetech motor UART buffer (<code>comm result -6</code>) and causing 2-second UI freezes.
+          </p>
+          <div class="hud-term" style="padding: 6px 8px; margin-bottom: 6px;">
+            <span class="ok">FIX:</span> Decoupled cameras into asynchronous snapshot capture during FSM settle phase &rarr; restored <strong>33 ms determinism</strong>.
+          </div>
+
+          <div class="card-title" style="margin-top: 10px;">2. Third-Party SDK Lock Deadlock</div>
+          <p style="font-size: 11px; line-height: 1.4; margin: 0 0 6px;">
+            In <code>scservo_sdk</code>, a 15 ms USB bus jitter timed out, leaving <code>port.is_using = True</code> permanently locked and freezing the teleop worker.
+          </p>
+          <div class="hud-term" style="padding: 6px 8px;">
+            <span class="ok">FIX:</span> Patched protocol packet handler to force-release locks on timeout &rarr; instantaneous jitter recovery.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">3. POSIX Handover & Hardware Ownership</div>
+          <p style="font-size: 11px; line-height: 1.4; margin: 0 0 6px;">
+            Background Studio backend held exclusive file locks on <code>/dev/ttyACM0</code> and <code>/dev/video*</code> nodes, forcing standalone UI into mock mode.
+          </p>
+          <div class="hud-term" style="padding: 6px 8px; margin-bottom: 6px;">
+            <span class="ok">FIX:</span> Engineered POSIX cleanup utilities (<code>fuser</code>, wiping <code>/dev/shm/iox2_*</code>) for atomic hardware handoff.
+          </div>
+
+          <div class="card-title" style="margin-top: 10px;">4. The 12V Brownout: Silicon Doesn't Lie</div>
+          <p style="font-size: 11px; line-height: 1.4; margin: 0 0 6px;">
+            Despite pristine code, the elbow joint suddenly refused to move. We bypassed all middleware and interrogated the internal servo EEPROM registers directly:
+          </p>
+          <div class="hud-term" style="padding: 6px 8px; font-size: 10px;">
+            &gt; Command elbow move...<br>
+            [0] Volt=12.4V<br>
+            [1] Volt=5.0V   <span class="err">&larr; CURRENT BROWNOUT DETECTED</span><br>
+            [2] Volt=0.0V   <span class="err">&larr; MICROCONTROLLER REBOOT &bull; RAM ERASED</span>
+          </div>
+          <div style="font-size: 11px; color: #a4c4ff; margin-top: 4px;">
+            <strong>Root Cause:</strong> Power supply current limiter damaged during uncalibrated snap. Software was 100% flawless; isolated failure directly to physical silicon power delivery.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation & Telemetry Bar -->
+  <div id="bottombar">
+    <div class="controls-left">
+      <button class="retro-btn" id="btn-prev" onclick="prevSlide()">&lt; PREV</button>
+      <button class="retro-btn" id="btn-next" onclick="nextSlide()">NEXT &gt;</button>
+      <span class="hud-badge" id="slide-num">SLIDE 01 / 06</span>
+    </div>
+
+    <div class="controls-center">
+      <span style="font-size: 10px; color: #9bc0ff;">KEYBOARD: [&larr; / &rarr;] Navigate &bull; [SPACE] Next &bull; [F] Fullscreen</span>
+    </div>
+
+    <div class="controls-right">
+      <button class="retro-btn" onclick="toggleFullscreen()">[F] FULLSCREEN</button>
+      <span class="hud-badge" style="color:var(--good);">&bull; INTEL CORE ULTRA ONLINE</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const totalSlides = 6;
+  const slides = document.querySelectorAll('.slide');
+  const crumbs = document.querySelectorAll('.nav-crumb');
+  const slideNum = document.getElementById('slide-num');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+
+  function updateSlide() {
+    slides.forEach((s, idx) => {
+      s.classList.toggle('active', idx === currentSlide);
+    });
+    crumbs.forEach((c, idx) => {
+      c.classList.toggle('active', idx === currentSlide);
+    });
+    slideNum.textContent = `SLIDE 0${currentSlide + 1} / 0${totalSlides}`;
+    btnPrev.disabled = currentSlide === 0;
+    btnNext.disabled = currentSlide === totalSlides - 1;
+  }
+
+  function gotoSlide(n) {
+    if (n >= 0 && n < totalSlides) {
+      currentSlide = n;
+      updateSlide();
+    }
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides - 1) {
+      currentSlide++;
+      updateSlide();
+    }
+  }
+
+  function prevSlide() {
+    if (currentSlide > 0) {
+      currentSlide--;
+      updateSlide();
+    }
+  }
+
+  // Keyboard navigation
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      e.preventDefault();
+      nextSlide();
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      prevSlide();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      gotoSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      gotoSlide(totalSlides - 1);
+    } else if (e.key >= '1' && e.key <= '6') {
+      gotoSlide(parseInt(e.key, 10) - 1);
+    } else if (e.key.toLowerCase() === 'f') {
+      toggleFullscreen();
+    }
+  });
+
+  // Responsive stage scaling (exactly like website/index.html)
+  function fit() {
+    const stage = document.getElementById('stage');
+    const scale = Math.min(window.innerWidth / 1120, window.innerHeight / 700);
+    stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  updateSlide();
+</script>
+</body>
+</html>

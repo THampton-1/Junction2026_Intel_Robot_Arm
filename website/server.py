@@ -281,6 +281,19 @@ class Handler(BaseHTTPRequestHandler):
         path = urlsplit(self.path).path  # drop any "?..." query string
         if path in ("/", "/index.html"):
             self.send_bytes((HERE / "index.html").read_bytes(), "text/html; charset=utf-8")
+        elif path in ("/presentation.html", "/presentation"):
+            pres_file = HERE.parent / "presentation.html"
+            if pres_file.exists():
+                self.send_bytes(pres_file.read_bytes(), "text/html; charset=utf-8")
+            else:
+                self.send_error(404)
+        elif path.startswith("/reports/") or path.startswith("/runs/"):
+            target = (HERE.parent / path.lstrip("/")).resolve()
+            if target.is_file() and str(target).startswith(str(HERE.parent)):
+                mime = "image/png" if target.suffix.lower() == ".png" else "application/octet-stream"
+                self.send_bytes(target.read_bytes(), mime)
+            else:
+                self.send_error(404)
         elif path == "/api/state":
             self.send_bytes(json.dumps(read_state()).encode(), "application/json")
         elif path.startswith("/snapshot/"):
