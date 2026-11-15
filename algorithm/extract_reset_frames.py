@@ -27,8 +27,11 @@ gives one photo: the block after that episode's rotation.
 Needs: pandas + pyarrow (to read the parquet files) and the ffmpeg command-line tool
 (to decode single frames from the AV1/H.264 episode videos).
 
-Reads LeRobot dataset format v2.x (one video file per episode) and v3.x (many episodes
-per video file, located through meta/episodes).
+Reads two layouts:
+  * The team's export (as in datasets/90_degree_turn): trajectories/episode_XX_joints.csv
+    with state_<joint> columns, and videos/episode_XX/<camera>.mp4.
+  * Raw LeRobot datasets, format v2.x (one video file per episode) and v3.x (many episodes
+    per video file, located through meta/episodes).
 """
 
 import argparse
@@ -95,6 +98,28 @@ def load_states(dataset_dir):
     columns = ["episode_index", "frame_index", "timestamp", "observation.state"]
     frames = pd.concat([pd.read_parquet(f, columns=columns) for f in files], ignore_index=True)
     return frames.sort_values(["episode_index", "frame_index"]).reset_index(drop=True)
+
+
+def is_export_layout(dataset_dir):
+    return (dataset_dir / "trajectories").is_dir()
+
+
+def load_export_states(dataset_dir):
+    """The team's export: one CSV per episode with state_<joint> columns."""
+    files = sorted((dataset_dir / "trajectories").glob("episode_*_joints.csv"))
+    if not files:
+        sys.exit(f"No episode_*_joints.csv files under {dataset_dir / 'trajectories'}")
+    frames = pd.concat([pd.read_csv(f) for f in files], ignore_index=True)
+
+    state_columns = [column for column in frames.columns if column.startswith("state_")]
+    joint_names = [column[len("state_"):] for column in state_columns]
+    # Pack the state columns into one list per row, the same shape LeRobot uses.
+    frames["observation.state"] = frames[state_columns].values.tolist()
+    frames = frames.sort_values(["episode_index", "frame_index"]).reset_index(drop=True)
+
+    first_episode = frames[frames["episode_index"] == frames["episode_index"].min()]
+    fps = round(1.0 / (first_episode["timestamp"].iloc[1] - first_episode["timestamp"].iloc[0]))
+    return frames, joint_names, fps
 
 
 def find_video_key(info, camera):
@@ -186,15 +211,12 @@ def find_photo_frames(episode_states, joint_names, reset_pose, args):
     return photo_rows
 
 
-def extract(dataset_dir, info, states, joint_names, args):
+def extract(states, joint_names, fps, locate_video, args):
+    """locate_video(episode) -> (video file, seconds into that file where the episode starts)."""
     reset_pose = load_reset_pose(args.reset_pose)
     missing = [joint for joint in CHECKED_JOINTS if joint not in joint_names]
     if missing:
         sys.exit(f"observation.state has no joints named {missing}; it has {joint_names}")
-
-    video_key = find_video_key(info, args.camera)
-    video_index = load_episode_video_index(dataset_dir, info, video_key)
-    fps = info["fps"]
 
     (args.out / "full").mkdir(parents=True, exist_ok=True)
     if args.crop:
@@ -210,7 +232,7 @@ def extract(dataset_dir, info, states, joint_names, args):
             continue
 
         photo_rows = find_photo_frames(episode_states, joint_names, reset_pose, args)
-        video_path, episode_start = video_location(dataset_dir, info, video_key, video_index, episode)
+        video_path, episode_start = locate_video(episode)
 
         for photo_number, row in enumerate(photo_rows, start=1):
             name = f"ep{episode:03d}_photo{photo_number}.png"
@@ -238,16 +260,33 @@ def extract(dataset_dir, info, states, joint_names, args):
 
 def main():
     args = parse_args()
-    info = load_info(args.dataset_dir)
-    states = load_states(args.dataset_dir)
-    joint_names = state_joint_names(info)
+    dataset_dir = args.dataset_dir
+
+    if is_export_layout(dataset_dir):
+        states, joint_names, fps = load_export_states(dataset_dir)
+
+        def locate_video(episode):
+            path = dataset_dir / "videos" / f"episode_{episode:02d}" / f"{args.camera}.mp4"
+            if not path.exists():
+                sys.exit(f"No video at {path}")
+            return path, 0.0
+    else:
+        info = load_info(dataset_dir)
+        states = load_states(dataset_dir)
+        joint_names = state_joint_names(info)
+        fps = info["fps"]
+
+        def locate_video(episode):
+            video_key = find_video_key(info, args.camera)
+            video_index = load_episode_video_index(dataset_dir, info, video_key)
+            return video_location(dataset_dir, info, video_key, video_index, episode)
 
     if args.estimate_reset_pose:
         estimate_reset_pose(states, joint_names, args.reset_pose)
     else:
         if not args.reset_pose.exists():
             sys.exit(f"No reset pose at {args.reset_pose} - run with --estimate-reset-pose first.")
-        extract(args.dataset_dir, info, states, joint_names, args)
+        extract(states, joint_names, fps, locate_video, args)
 
 
 if __name__ == "__main__":
