@@ -4,8 +4,8 @@ Pull the inspection photos out of recorded episodes, using the same ResetPoseTri
 robot will run live.
 
 For each episode it replays observation.state frame by frame through the trigger, and on
-every frame the trigger fires it saves that frame from the chosen camera (plus an optional
-fixed crop around the block).
+every frame the trigger fires it saves that frame from the chosen camera, plus a crop to
+INSPECTION_CROP (from reset_pose_trigger.py, the same box the live loop uses).
 
 Step 1 - find the reset pose X (median of each episode's first frame, which is the arm
 sitting at reset before it moves):
@@ -16,10 +16,9 @@ sitting at reset before it moves):
 
 Step 2 - extract the photos:
 
-    python algorithm/extract_reset_frames.py <dataset_dir> --out inspection_frames \
-        --crop 58 125 56 56
+    python algorithm/extract_reset_frames.py <dataset_dir> --out inspection_frames
 
-Output: <out>/full/epXXX_photoN.png, <out>/crop/epXXX_photoN.png (if --crop), and
+Output: <out>/full/epXXX_photoN.png, <out>/crop/epXXX_photoN.png, and
 <out>/photos.csv listing episode, photo number, frame index and timestamp for each photo.
 Recorded episodes hold one rotation each (grasp, rotate, release, back to reset), so each
 gives one photo: the block after that episode's rotation.
@@ -48,6 +47,7 @@ from reset_pose_trigger import (
     CHECKED_JOINTS,
     EXIT_MARGIN,
     HOLD_FRAMES,
+    INSPECTION_CROP,
     TOLERANCE,
     ResetPoseTrigger,
     load_reset_pose,
@@ -66,7 +66,8 @@ def parse_args():
     parser.add_argument("--out", type=Path, default=Path("inspection_frames"), help="output folder")
     parser.add_argument("--camera", default="side_view", help="camera name, matched against the video feature names")
     parser.add_argument("--episodes", type=int, nargs="*", help="episode indices to process (default: all)")
-    parser.add_argument("--crop", type=int, nargs=4, metavar=("X", "Y", "W", "H"), help="fixed crop box in pixels")
+    parser.add_argument("--crop", type=int, nargs=4, metavar=("X", "Y", "W", "H"), default=list(INSPECTION_CROP),
+                        help=f"crop box in pixels (default: INSPECTION_CROP = {INSPECTION_CROP})")
     parser.add_argument("--expected-photos", type=int, default=1, help="warn when an episode gives a different count")
     parser.add_argument("--tolerance", type=float, default=TOLERANCE)
     parser.add_argument("--exit-margin", type=float, default=EXIT_MARGIN)

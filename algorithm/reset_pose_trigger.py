@@ -39,6 +39,13 @@ EXIT_MARGIN = 5.0      # must go beyond TOLERANCE + EXIT_MARGIN to re-arm
 HOLD_FRAMES = 5        # consecutive in-pose frames needed (5 frames = 0.17 s at 30 fps)
 CHECKED_JOINTS = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex"]
 
+# The photo is cropped to this box (x, y, width, height in side_view pixels) both when
+# building Anomalib training images and live, so the two always match. Measured on the 10
+# 90_degree_turn photos: the blocks span x 62-111, y 132-176, so this leaves 1-2 px around
+# every block, and the claw tips (which reach x ~53 at the reset pose) stay ~7 px outside.
+# Re-measure if the side camera or the block's marked spot moves.
+INSPECTION_CROP = (60, 130, 54, 49)
+
 
 def short_joint_name(name):
     # "shoulder_pan.pos" -> "shoulder_pan"

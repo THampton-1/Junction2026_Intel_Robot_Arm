@@ -5,8 +5,9 @@ releasing the block. Each recorded episode is one rotation (grasp, rotate, relea
 reset), so each episode gives one photo of the block's newly exposed face. Run live through
 the full routine, it gives one photo per rotation.
 
-The claw is in the side camera's view at X, so photos must use the tight crop below. See
-[Checked on real episodes](#checked-on-real-episodes).
+The claw is in the side camera's view at X, so every photo is cropped to `INSPECTION_CROP`
+(x 60, y 130, 54 × 49 px), defined once in `reset_pose_trigger.py`. Training and live photos
+use that same box. See [Checked on real episodes](#checked-on-real-episodes).
 
 The same `ResetPoseTrigger` runs offline on recorded episodes (to build training crops)
 and live on the robot, so training and runtime photos are chosen by the same rule.
@@ -35,7 +36,7 @@ Each frame, with `d` = the largest |joint − X| over the checked joints:
 | File | What it does |
 |---|---|
 | `reset_pose_trigger.py` | The trigger. Plain Python, no dependencies. |
-| `extract_reset_frames.py` | Runs the trigger over recorded episodes and saves the photo frames plus an optional fixed crop. Reads the team's export layout (`datasets/90_degree_turn`) and raw LeRobot v2.x/v3.x. Needs pandas, pyarrow and the `ffmpeg` command. |
+| `extract_reset_frames.py` | Runs the trigger over recorded episodes and saves each photo frame, full and cropped to `INSPECTION_CROP`. Reads the team's export layout (`datasets/90_degree_turn`) and raw LeRobot v2.x/v3.x. Needs pandas, pyarrow and the `ffmpeg` command. |
 | `test_reset_pose_trigger.py` | 11 tests on synthetic joint traces (near-miss, jitter, retries, quick pass-through, ...). |
 | `reset_pose.json` | X itself, estimated from the 10 `90_degree_turn` episodes. Re-create it if the reset mark moves. |
 | `episode_check/` | Frames from the real episodes, used to check the trigger and the crop. |
@@ -47,8 +48,8 @@ Each frame, with `d` = the largest |joint − X| over the checked joints:
 #    printed per-joint range; a large range means episodes didn't start at the same pose.
 python algorithm/extract_reset_frames.py datasets/90_degree_turn --estimate-reset-pose
 
-# 2. Extract photos (crop box is x y w h in side_view pixels around the centre spot)
-python algorithm/extract_reset_frames.py datasets/90_degree_turn --out inspection_frames --crop 58 125 56 56
+# 2. Extract photos (cropped to INSPECTION_CROP unless you pass --crop X Y W H)
+python algorithm/extract_reset_frames.py datasets/90_degree_turn --out inspection_frames
 
 # Tests
 python -m unittest discover -s algorithm -v
@@ -60,13 +61,15 @@ for checking by eye.
 Live, in the control loop:
 
 ```python
-from reset_pose_trigger import ResetPoseTrigger, load_reset_pose
+from reset_pose_trigger import INSPECTION_CROP, ResetPoseTrigger, load_reset_pose
 
 trigger = ResetPoseTrigger(load_reset_pose("algorithm/reset_pose.json"))
+x, y, w, h = INSPECTION_CROP
 while running:
     joint_state = read_follower_joints()   # dict: "shoulder_pan" -> position, same units as recording
     if trigger.update(joint_state):
-        photo = side_camera.read()         # arm is parked at X; crop to 58 125 56 56
+        frame = side_camera.read()         # 320x240 image as a numpy array (rows, columns, colour)
+        photo = frame[y:y + h, x:x + w]    # same box as the training crops
 ```
 
 ## Checked on real episodes
@@ -91,12 +94,18 @@ H.264 320×240 @ 30 fps). Images are in `episode_check/`.
 - **The claw is in the camera's view at X.** Its tips sit just left of the block
   (`key_frames.jpg`, first and last tiles). The arm is only fully out of view while it is
   raised on the way back, about frames 930–970 of episode 00 (`return_frames_870_1060.jpg`).
-- **The tight crop `58 125 56 56` contains the whole block and no claw in all 10 photos**
-  (`all_episodes_crops.png`). The margins are thin, though (`all_episodes_crop_box.png`):
-  in episodes 01 and 04 the claw tips land right on the crop's left edge, and the block's
-  spot drifts a few pixels between episodes. Moving the side camera slightly, or re-marking
-  the reset pose so the claw parks a little further left, would add margin. Re-measure the
-  crop after either change.
+- **`INSPECTION_CROP` (x 60, y 130, 54 × 49) holds the whole block and no claw in all 10
+  photos** (`all_episodes_crops.png`). It was set from measurements: each block's outline was
+  found by colour, and across the 10 photos the blocks span x 62–111, y 132–176. That leaves
+  1–2 px around every block. On a 10 px grid, the claw tips reach x ≈ 52–53 in the closest
+  episodes (01 and 04), about 7 px outside the crop. `all_episodes_crop_box.png` shows the
+  new box (cyan) and the earlier, looser box (yellow).
+- **Keep the side camera and the reset mark where they are.** The arm-control model is
+  trained on this camera view and this reset pose, and the crop is measured for them. If
+  either moves, re-measure the crop (and expect to retrain the policy).
+- **Not done: centring the crop on each block by colour.** That would remove the few pixels
+  of drift, but it depends on the block's colour, and wrong colours are one of the defects
+  being detected. The fixed box treats every block the same.
 
 Also tested on synthetic data: the trigger logic (unit tests), plus a fake LeRobot v2.1 and
 v3.0 dataset where every one of 60 extracted images was confirmed to be the exact intended
