@@ -16,9 +16,12 @@ Hooking up the real robot loop later: the loop imports this file and calls
 
 import argparse
 import json
+import os
 import random
 import threading
 import time
+import urllib.error
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -188,6 +191,89 @@ def _run_cycle():
 
 
 # ---------------------------------------------------------------------------
+# Chatbot ("Chat with Adapt"). Uses the Gemini API with the standard library only.
+# The key is read from website/gemini_key.txt (or GEMINI_API_KEY), so it never reaches the page.
+# ---------------------------------------------------------------------------
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+# What the chatbot knows about the project. Edit these facts to match the final system.
+CHAT_FACTS = (
+    "You are Adapt, the assistant on the Adapt live inspection demo page, built by a team at "
+    "Junction 2026 for the Intel Physical AI Challenge. Facts about the system: an SO-101 robot "
+    "arm inspects Duplo blocks. Three cameras watch the cell: an overhead RealSense, a side "
+    "webcam and a claw camera. The arm rotates each block 90 degrees at a time so the side camera "
+    "sees all four sides. A PatchCore anomaly model (Anomalib, optimised with OpenVINO) runs on "
+    "the Intel Xe3 integrated GPU of an Intel Core Ultra laptop in about 3.78 ms and scores each "
+    "view; a peak score above the threshold means DEFECT. The defect is a small black mark on one "
+    "side of the block. A learned ACT policy, trained from teleoperated demonstrations, moves the "
+    "arm and places the block in the pink bowl (defect) or the green bowl (good). "
+    "Rules: answer in plain text with no markdown, in at most three short sentences. "
+    "If you do not know something, say so instead of guessing."
+)
+
+
+def read_gemini_key():
+    """The key comes from website/gemini_key.txt, or the GEMINI_API_KEY environment variable."""
+    key_file = HERE / "gemini_key.txt"
+    if key_file.exists():
+        key = key_file.read_text().strip()
+        if key and "PASTE" not in key:
+            return key
+    return os.environ.get("GEMINI_API_KEY", "").strip()
+
+
+def chat_reply(messages):
+    """Sends the recent conversation to Gemini and returns its answer as plain text."""
+    key = read_gemini_key()
+    if not key:
+        return "Chat is offline. Paste your Gemini key into website/gemini_key.txt."
+
+    contents = []
+    for message in messages[-9:]:  # recent turns only: keeps token use small
+        if not isinstance(message, dict):
+            continue
+        text = str(message.get("text", "")).strip()[:600]
+        role = "model" if message.get("role") == "model" else "user"
+        if text:
+            contents.append({"role": role, "parts": [{"text": text}]})
+    while contents and contents[0]["role"] == "model":  # Gemini expects the user to speak first
+        contents.pop(0)
+    if not contents:
+        return "Type a question first."
+
+    state = read_state()
+    live = (f" Live state of the cell right now: stage={state['stage']}, peak score={state['score']}, "
+            f"verdict={state['verdict']}, threshold={state['threshold']}, status={state['message']!r}.")
+    body = {
+        "system_instruction": {"parts": [{"text": CHAT_FACTS + live}]},
+        "contents": contents,
+        "generationConfig": {"maxOutputTokens": 1024, "temperature": 0.4},
+    }
+    request = urllib.request.Request(
+        GEMINI_URL.format(model=GEMINI_MODEL),
+        data=json.dumps(body).encode(),
+        headers={"Content-Type": "application/json", "x-goog-api-key": key},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            data = json.load(response)
+        parts = data["candidates"][0]["content"]["parts"]
+        text = " ".join(part.get("text", "") for part in parts if not part.get("thought"))
+        return " ".join(text.split()) or "I have no answer for that one."
+    except urllib.error.HTTPError as error:
+        print(f"[chat] Gemini returned HTTP {error.code}: {error.read()[:300]!r}")
+        if error.code == 429:
+            return "I've hit the free usage limit. Try again in a minute."
+        return f"Gemini refused the request (HTTP {error.code}). Check GEMINI_API_KEY and GEMINI_MODEL."
+    except (KeyError, IndexError, TypeError):
+        return "I have no answer for that one."
+    except Exception as error:
+        print(f"[chat] could not reach Gemini: {error}")
+        return "I can't reach Gemini right now. Check the internet connection."
+
+
+# ---------------------------------------------------------------------------
 # Web server
 # ---------------------------------------------------------------------------
 class Handler(BaseHTTPRequestHandler):
@@ -215,6 +301,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         global _busy
+        if urlsplit(self.path).path == "/api/chat":
+            self.chat()
+            return
         if urlsplit(self.path).path != "/api/start":
             self.send_error(404)
             return
@@ -226,6 +315,18 @@ class Handler(BaseHTTPRequestHandler):
                       verdict=None, message="Starting")
         threading.Thread(target=_run_cycle, daemon=True).start()
         self.send_bytes(b'{"started": true}', "application/json")
+
+    def chat(self):
+        """POST /api/chat with {"messages": [{"role": "user" or "model", "text": "..."}]}."""
+        length = min(int(self.headers.get("Content-Length") or 0), 20000)
+        try:
+            messages = json.loads(self.rfile.read(length) or b"{}").get("messages", [])
+        except (ValueError, AttributeError):
+            messages = []
+        if not isinstance(messages, list):
+            messages = []
+        reply = chat_reply(messages)
+        self.send_bytes(json.dumps({"reply": reply}).encode(), "application/json")
 
     def send_bytes(self, body, mime, status=200):
         self.send_response(status)

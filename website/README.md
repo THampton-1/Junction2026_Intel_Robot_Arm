@@ -10,9 +10,27 @@ python website/server.py --cameras live     # real cameras, on the robot laptop 
 # open http://localhost:8000, press Enter.  /?autostart starts a run on page load.
 ```
 
+## Chatbot
+
+Under "Ask Adapt", pick **Chat with Adapt** to ask questions instead of starting the robot.
+**Inspect a block** (the default) works exactly as before. The chatbot uses the Gemini API and
+needs a key from Google AI Studio. Paste the key into `website/gemini_key.txt` (replace the
+placeholder line, nothing else in the file), then start the server as usual. Do not commit that
+file: add `website/gemini_key.txt` to `.gitignore`. Setting the `GEMINI_API_KEY` environment
+variable works too.
+
+```bash
+export GEMINI_MODEL=gemini-3.6-flash        # optional; any Gemini model ID your key can use
+python website/server.py
+```
+
+The key is only read by `server.py`; the page never sees it. Without a key the chat says it is offline
+and everything else still works. What the chatbot knows is the `CHAT_FACTS` text in `server.py`,
+plus the live stage, score and verdict.
+
 | File | What it does |
 |---|---|
-| `server.py` | Web server: the page, `/stream/{top,side,claw}` live video, `/snapshot/<view>`, `/api/state`, `POST /api/start` |
+| `server.py` | Web server: the page, `/stream/{top,side,claw}` live video, `/snapshot/<view>`, `/api/state`, `POST /api/start`, `POST /api/chat` (chatbot) |
 | `index.html` | The whole page: layout, chat, camera cycling, reticle animation. No libraries. |
 
 ## Before demo day
