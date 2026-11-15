@@ -121,6 +121,13 @@ Three isolated Python environments exist on this laptop to prevent library colli
   * **Intel CPU:** `74.99 ms` (Xe3 iGPU is **~20× faster**)
 * **Execution Script:** `python3 scripts/train_anomalib_patchcore.py`
 
+### **Step 4b: Final Side-View Inspection Model, Anomalib Test 3 (COMPLETED, 15 Nov 2026)**
+* **Supersedes the Step 4 claw-cam model for the defect gate.** Side camera, photo taken with the arm parked at the reset pose, cropped to `INSPECTION_CROP` = x 60, y 130, 54 × 49 px (`algorithm/reset_pose_trigger.py`).
+* **Data:** 29 normal training crops (19 Theo Frames v2 + 10 from `datasets/90_degree_turn` via the reset-pose trigger); test 8 normal + 16 abnormal.
+* **Results:** Image AUROC **0.961** (all 24), **1.00** excluding ep33, whose defect is not visible from the side. **Decision threshold 0.37.**
+* **Model files:** not in git (127 MB); on the training laptop under `C:\Users\theoh\anomalib_runs\test_3\side_view_no_ep05\export\`. Must be copied to the robot laptop.
+* **Not yet wired into the live code:** `config.py`, `scripts/sorting_middleware.py` and `website/server.py` still use the claw model and 0.4781. See `README.md` §4 and `anomalib/test_3/findings.md`.
+
 ### **Step 5: Record Full Demonstrations & Train Policy on Modal (READY TO RUN)**
 1. **Recorded Datasets Available:**
    * `Block to Green` (`ea625a1c-d316-4a7b-88f0-43838fbf9364`): 22 episodes.

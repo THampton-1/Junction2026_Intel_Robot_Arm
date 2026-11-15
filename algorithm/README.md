@@ -37,6 +37,7 @@ Each frame, with `d` = the largest |joint − X| over the checked joints:
 |---|---|
 | `reset_pose_trigger.py` | The trigger. Plain Python, no dependencies. |
 | `extract_reset_frames.py` | Runs the trigger over recorded episodes and saves each photo frame, full and cropped to `INSPECTION_CROP`. Reads the team's export layout (`datasets/90_degree_turn`) and raw LeRobot v2.x/v3.x. Needs pandas, pyarrow and the `ffmpeg` command. |
+| `crop_photos.py` | Crops a folder of existing 320×240 side_view photos to `INSPECTION_CROP`, keeping the folder structure (so a `train/normal`, `test/normal`, `test/abnormal` input comes out ready for Anomalib), and saves a contact sheet. Used for Anomalib Test 3. Needs Pillow. |
 | `test_reset_pose_trigger.py` | 11 tests on synthetic joint traces (near-miss, jitter, retries, quick pass-through, ...). |
 | `reset_pose.json` | X itself, estimated from the 10 `90_degree_turn` episodes. Re-create it if the reset mark moves. |
 | `episode_check/` | Frames from the real episodes, used to check the trigger and the crop. |
