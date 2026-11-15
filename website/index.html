@@ -126,6 +126,9 @@
   }
   #enter:active { border-style: inset; }
   #hint { margin-top: 6px; font-size: 10px; opacity: .7; }
+  #modes { display: flex; gap: 12px; margin: 0 0 7px; font-size: 11px; }
+  #modes label { cursor: pointer; white-space: nowrap; }
+  #modes input { margin: 0 4px 0 0; vertical-align: -2px; accent-color: var(--orange); }
 
   /* Bottom: the three pipeline stages */
   #stages { position: absolute; left: 230px; top: 528px; width: 745px; display: flex; }
@@ -190,6 +193,10 @@
     <div class="arrow"><span id="chatTitle">Ask Adapt</span></div>
     <div id="log">
       <div>Learn how the new Adapt&trade; inspection arm finds a defect before it moves a single brick.</div>
+    </div>
+    <div id="modes">
+      <label><input type="radio" name="askMode" value="robot" checked>Inspect a block</label>
+      <label><input type="radio" name="askMode" value="chat">Chat with Adapt</label>
     </div>
     <div id="ask">
       <input id="question" value="Is the block a defect?" autocomplete="off">
@@ -301,9 +308,61 @@ async function startRun() {
   say("Initialising: arm online, three cameras streaming, PatchCore loaded on the Xe3 iGPU.");
 }
 
-$("enter").addEventListener("click", startRun);
+// ---------------------------------------------------------------- chatbot (Gemini, via server.py)
+// The radio buttons pick what Enter does: start the robot (as before) or ask the chatbot.
+const ROBOT_QUESTION = "Is the block a defect?";
+let askMode = "robot";      // "robot" or "chat"
+let chatHistory = [];       // [{role: "user" | "model", text}], sent with each question for context
+let chatWaiting = false;
+
+for (const radio of document.querySelectorAll('input[name="askMode"]')) {
+  radio.addEventListener("change", () => {
+    askMode = radio.value;
+    const question = $("question");
+    if (askMode === "chat") {
+      question.value = "";
+      question.placeholder = "Ask how Adapt works";
+      $("hint").textContent = "Press Enter to ask the Adapt chatbot.";
+      question.focus();
+    } else {
+      question.value = ROBOT_QUESTION;
+      question.placeholder = "";
+      $("hint").textContent = "Press Enter to start the robot.";
+    }
+  });
+}
+
+async function sendChat() {
+  const text = $("question").value.trim();
+  if (!text || chatWaiting) return;
+  chatWaiting = true;
+  $("question").value = "";
+  addUserLine(text);
+  chatHistory.push({ role: "user", text });
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: chatHistory.slice(-9) }),
+    });
+    const reply = (await response.json()).reply;
+    chatHistory.push({ role: "model", text: reply });
+    say(reply);
+  } catch (error) {
+    chatHistory.pop();  // forget the question that never got an answer
+    say("I can't reach the Adapt server. Is server.py running?");
+  }
+  chatWaiting = false;
+}
+
+function submit() {
+  if (askMode === "chat") sendChat();
+  else startRun();
+}
+
+$("enter").addEventListener("click", submit);
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") { event.preventDefault(); startRun(); }
+  if (event.key === "Enter") { event.preventDefault(); submit(); }
 });
 // Opening the page as /?autostart starts a run straight away (handy for a kiosk screen).
 if (new URLSearchParams(location.search).has("autostart")) startRun();
