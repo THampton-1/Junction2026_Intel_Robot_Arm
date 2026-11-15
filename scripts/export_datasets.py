@@ -18,6 +18,7 @@ import pyarrow.parquet as pq
 DATASETS = [
     ("Block_To_Green_v4", "a531500b-01d8-496e-9d3e-6bee809b38c1", "green_v4"),
     ("Block_To_Pink_v4", "80b4f232-a586-4416-a098-fb93752a6175", "pink_v4"),
+    ("Block_To_Pink_v5", "821972b1-430d-46b1-82bb-0646691c85fd", "pink_v5"),
 ]
 
 REPO_ROOT = Path("/home/intel/Junction")
