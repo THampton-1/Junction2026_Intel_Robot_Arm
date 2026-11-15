@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adapt Live Inspection</title>
+<style>
+  :root {
+    --blue: #0b30d8;
+    --blue-dark: #0622a0;
+    --blue-tab: #1d4dff;
+    --orange: #ff9d1c;
+    --good: #2bdc45;
+    --defect: #ff3d9a;
+    --text: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif; color: var(--text);
+    background: repeating-linear-gradient(to bottom, #0c33e0 0 2px, #0a2cc6 2px 4px);
+  }
+  a { color: var(--text); }
+
+  /* The page is laid out at a fixed 1000x700, like a 2000-era site, then scaled to fit the screen. */
+  #stage { position: absolute; left: 50%; top: 50%; width: 1000px; height: 700px; transform-origin: center; }
+
+  #leftcol {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 205px;
+    background: linear-gradient(to right, rgba(40,90,255,.35), rgba(40,90,255,0));
+  }
+
+  /* Top link bar */
+  #topbar {
+    position: absolute; left: 0; top: 0; width: 790px; height: 26px;
+    display: flex; gap: 92px; align-items: center; padding-left: 14px;
+    background: rgba(0, 10, 90, .35); font-size: 11px;
+  }
+  #topbar span::before, .nav::before {
+    content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--orange); margin-right: 6px; vertical-align: middle;
+  }
+
+  /* Logo tab, top right */
+  #logo {
+    position: absolute; right: 36px; top: 0; width: 180px; height: 80px;
+    background: var(--blue-tab); border-radius: 0 0 0 24px;
+    box-shadow: 3px 4px 0 var(--blue-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px; font-weight: bold; letter-spacing: -2px;
+  }
+  #logo b { color: var(--orange); }
+
+  /* Left navigation */
+  #nav { position: absolute; left: 14px; top: 42px; width: 180px; }
+  #camSelect {
+    width: 150px; font-size: 11px; padding: 2px; margin-bottom: 18px;
+    border: 2px inset #c0c0c0; background: #fff; color: #000;
+  }
+  .nav {
+    display: block; margin-bottom: 9px; padding: 4px 8px 4px 12px; font-size: 14px;
+    text-decoration: none; background: linear-gradient(to bottom, #2752f4, #0f37d6);
+    box-shadow: 3px 3px 0 var(--blue-dark);
+  }
+  .nav.gap { margin-top: 30px; }
+
+  /* Headline */
+  #h1 { position: absolute; left: 240px; top: 62px; margin: 0; font-size: 42px; font-weight: 300; z-index: 3; }
+  #h2 { position: absolute; left: 430px; top: 108px; margin: 0; font-size: 26px; font-weight: 300; z-index: 3; }
+
+  /* Hero: the picture that turns into the live camera feed */
+  #bits { position: absolute; left: 170px; top: 132px; width: 556px; height: 384px; pointer-events: none; z-index: 2; }
+  #hero {
+    position: absolute; left: 230px; top: 150px; width: 456px; height: 342px;
+    overflow: hidden; background: #000a40;
+  }
+  #hero img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    image-rendering: pixelated; opacity: 0; transition: opacity .25s;
+  }
+  #still {
+    opacity: 1 !important; transition: filter 1.2s, opacity 1.2s !important;
+    filter: grayscale(1) sepia(1) hue-rotate(190deg) saturate(5) brightness(.75) contrast(1.3);
+  }
+  body.live #still { opacity: 0 !important; }
+  #hero img.cam.on { opacity: 1; }
+  #reticle { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #scanlines {
+    position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,.18) 0 1px, transparent 1px 3px);
+  }
+  #vignette { position: absolute; inset: 0; box-shadow: inset 0 0 40px 18px var(--blue); pointer-events: none; }
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  #flash.go { animation: flash .18s ease-out; }
+  @keyframes flash { from { opacity: .7; } to { opacity: 0; } }
+
+  .hud {
+    position: absolute; font: bold 11px "Courier New", monospace; letter-spacing: 1px;
+    text-shadow: 0 0 4px #000, 0 0 2px #000; display: none;
+  }
+  body.live .hud { display: block; }
+  #hud-tl { left: 18px; top: 14px; }
+  #hud-tr { right: 18px; top: 14px; }
+  #hud-bl { left: 18px; bottom: 14px; }
+  #rec { color: #ff3333; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Right column: the one-question chat */
+  #chat { position: absolute; left: 736px; top: 180px; width: 244px; font-size: 13px; line-height: 1.35; }
+  .arrow::before {
+    content: ""; display: inline-block; border: 5px solid transparent; border-left: 7px solid var(--orange);
+    margin-right: 6px; vertical-align: middle;
+  }
+  #chatTitle { font-size: 14px; font-weight: bold; text-decoration: underline; }
+  #log { height: 196px; overflow-y: auto; margin: 8px 0; padding-right: 4px; }
+  #log div { margin-bottom: 6px; }
+  #log .user { color: #ffe08a; }
+  #ask { display: flex; gap: 6px; }
+  #question {
+    flex: 1; font: 12px Arial; padding: 3px 4px; color: #000; background: #fff;
+    border: 2px inset #c0c0c0;
+  }
+  #enter {
+    font: bold 12px Arial; padding: 3px 10px; color: #000; background: #d4d0c8; cursor: pointer;
+    border: 2px outset #f0f0f0;
+  }
+  #enter:active { border-style: inset; }
+  #hint { margin-top: 6px; font-size: 10px; opacity: .7; }
+
+  /* Bottom: the three pipeline stages */
+  #stages { position: absolute; left: 230px; top: 528px; width: 745px; display: flex; }
+  .stage { flex: 1; padding: 0 14px; border-left: 1px solid rgba(255,255,255,.35); position: relative; font-size: 11px; }
+  .stage:first-child { border-left: none; padding-left: 0; }
+  .stage::after {
+    content: ""; position: absolute; left: -3px; top: -8px; width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,.6);
+  }
+  .stage:first-child::after { display: none; }
+  .stage b { display: block; font-size: 12px; text-decoration: underline; margin-bottom: 3px; }
+  .stage.active b { color: #ffe08a; }
+  .stage.active .arrow::before { animation: blink .5s steps(1) infinite; }
+
+  #footer { position: absolute; right: 40px; top: 650px; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="leftcol"></div>
+
+  <div id="topbar">
+    <span>Adapt.com</span><span>Contents</span><span>Search</span><span>Contact Us</span><span>Support</span>
+  </div>
+  <div id="logo">adapt<b>.</b></div>
+
+  <div id="nav">
+    <select id="camSelect" title="Pick a camera, or let it cycle">
+      <option value="auto">Select a Camera</option>
+      <option value="top">Top View</option>
+      <option value="side">Side View</option>
+      <option value="claw">Claw View</option>
+    </select>
+    <a class="nav" href="#">Live Inspection</a>
+    <a class="nav" href="#">Anomaly Scores</a>
+    <a class="nav" href="#">Robot Arm</a>
+    <a class="nav" href="#">Our Team</a>
+    <a class="nav gap" href="#">Products/Services</a>
+    <a class="nav" href="#">Company Info</a>
+    <a class="nav" href="#">For Junction 2026 Judges</a>
+  </div>
+
+  <h1 id="h1">Making Inspection</h1>
+  <h2 id="h2">as Physical as Our AI</h2>
+
+  <div id="hero">
+    <img id="still" alt="">
+    <img class="cam" id="cam-top" alt="Top camera">
+    <img class="cam" id="cam-side" alt="Side camera">
+    <img class="cam" id="cam-claw" alt="Claw camera">
+    <canvas id="reticle" width="912" height="684"></canvas>
+    <div id="scanlines"></div>
+    <div id="vignette"></div>
+    <div id="flash"></div>
+    <div class="hud" id="hud-tl"><span id="rec">&#9679; REC</span> <span id="camLabel"></span></div>
+    <div class="hud" id="hud-tr"></div>
+    <div class="hud" id="hud-bl"></div>
+  </div>
+  <canvas id="bits" width="556" height="384"></canvas>
+
+  <div id="chat">
+    <div class="arrow"><span id="chatTitle">Ask Adapt</span></div>
+    <div id="log">
+      <div>Learn how the new Adapt&trade; inspection arm finds a defect before it moves a single brick.</div>
+    </div>
+    <div id="ask">
+      <input id="question" value="Is the block a defect?" autocomplete="off">
+      <button id="enter">Enter</button>
+    </div>
+    <div id="hint">Press Enter to start the robot.</div>
+  </div>
+
+  <div id="stages">
+    <div class="stage" id="st-0"><b class="arrow">Perceive</b>Three cameras: overhead RealSense, side webcam and claw cam.</div>
+    <div class="stage" id="st-1"><b class="arrow">Detect</b>PatchCore anomaly map on the Intel Xe3 iGPU in 3.78 ms.</div>
+    <div class="stage" id="st-2"><b class="arrow">Act</b>An ACT policy places the block in the green or pink bowl.</div>
+  </div>
+
+  <div id="footer">*<a href="#">Built at Junction 2026</a> on <a href="#">Intel&reg; Core&trade; Ultra</a> &copy; 2026 Adapt</div>
+</div>
+
+<script>
+// ---------------------------------------------------------------- settings
+const VIEWS = ["top", "side", "claw"];
+const VIEW_NAMES = { top: "TOP VIEW", side: "SIDE VIEW", claw: "CLAW VIEW" };
+const CYCLE_MS = 3000;      // time on each camera while cycling
+const DWELL_MS = 260;       // pause on each candidate box while honing in
+const LOCK_HOLD_MS = 5000;  // how long the lock-on stays on screen
+const POLL_MS = 250;        // how often we ask the server for the robot's state
+
+// ---------------------------------------------------------------- page state
+let started = false;        // has Enter been pressed at least once
+let currentView = null;
+let cycleIndex = 0;
+let lastSwitch = 0;
+let holdView = null;        // camera to stay on while honing in / locked
+let serverState = { stage: "idle" };
+let huntedRun = 0;          // the last run whose boxes we have animated
+
+// The aim dot. Positions are fractions of the frame (0..1), so they don't depend on screen size.
+const aim = { x: 0.5, y: 0.5 };
+let mode = "orbit";         // orbit -> hunt -> lock -> orbit
+let hunt = null;            // details of the current honing-in sequence
+let lastVerdict = null;
+
+const $ = (id) => document.getElementById(id);
+const reticle = $("reticle"), rctx = reticle.getContext("2d");
+const bits = $("bits"), bctx = bits.getContext("2d");
+
+// ---------------------------------------------------------------- scale the page to the screen
+function fit() {
+  const scale = Math.min(innerWidth / 1000, innerHeight / 700);
+  $("stage").style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+addEventListener("resize", fit);
+fit();
+
+// ---------------------------------------------------------------- still picture before Enter
+function loadStill() {
+  const still = $("still");
+  still.onerror = () => setTimeout(loadStill, 500);  // server may not have a frame yet
+  still.src = "/snapshot/top?" + Date.now();
+}
+loadStill();
+
+// ---------------------------------------------------------------- chat
+let chatQueue = Promise.resolve();  // messages type out one after another, never overlapping
+
+function addUserLine(text) {
+  chatQueue = chatQueue.then(() => {
+    const line = document.createElement("div");
+    line.className = "user";
+    line.textContent = "> " + text;
+    $("log").appendChild(line);
+    $("log").scrollTop = 1e9;
+  });
+}
+
+function say(text) {
+  chatQueue = chatQueue.then(() => new Promise((done) => {
+    const line = document.createElement("div");
+    $("log").appendChild(line);
+    let i = 0;
+    const timer = setInterval(() => {
+      i += 1;
+      line.textContent = "Adapt: " + text.slice(0, i);
+      $("log").scrollTop = 1e9;
+      if (i >= text.length) { clearInterval(timer); done(); }
+    }, 18);
+  }));
+}
+
+async function startRun() {
+  const question = $("question").value.trim() || "Is the block a defect?";
+  addUserLine(question);
+  let response;
+  try {
+    response = await fetch("/api/start", { method: "POST" });
+  } catch (error) {
+    say("I can't reach the Adapt server. Is server.py running?");
+    return;
+  }
+  if (response.status === 409) {
+    say("One block at a time, I'm still working on the last one.");
+    return;
+  }
+  if (!started) {
+    started = true;
+    for (const view of VIEWS) $("cam-" + view).src = "/stream/" + view;
+    document.body.classList.add("live");
+    lastSwitch = performance.now();
+  }
+  say("Initialising: arm online, three cameras streaming, PatchCore loaded on the Xe3 iGPU.");
+}
+
+$("enter").addEventListener("click", startRun);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") { event.preventDefault(); startRun(); }
+});
+// Opening the page as /?autostart starts a run straight away (handy for a kiosk screen).
+if (new URLSearchParams(location.search).has("autostart")) startRun();
+
+// ---------------------------------------------------------------- poll the robot's state
+async function poll() {
+  try {
+    const response = await fetch("/api/state");
+    serverState = await response.json();
+  } catch (error) {
+    return;  // server briefly unavailable; try again next tick
+  }
+  // New boxes for a run we haven't animated yet: start honing in.
+  if (started && serverState.boxes && serverState.boxes.length && serverState.run !== huntedRun) {
+    huntedRun = serverState.run;
+    startHunt(serverState);
+  }
+  if (serverState.stage === "done" && hunt === null && lastVerdict && !lastVerdict.announcedDone) {
+    lastVerdict.announcedDone = true;
+    say("Done. Press Enter to inspect the next block.");
+  }
+  updateStages();
+}
+setInterval(poll, POLL_MS);
+
+function updateStages() {
+  const stageColumn = { perceive: 0, detect: 1, execute: 2 };
+  let active = stageColumn[serverState.stage];
+  if (mode === "hunt") active = 1;
+  for (let i = 0; i < 3; i++) $("st-" + i).classList.toggle("active", i === active);
+}
+
+// ---------------------------------------------------------------- honing in on the defect
+function startHunt(state) {
+  // Visit candidates from lowest to highest score, so the dot converges on the strongest peak.
+  const boxes = [...state.boxes].sort((a, b) => a.score - b.score);
+  hunt = {
+    boxes, index: 0, revealed: 0, arrivedAt: 0, lockStart: 0,
+    view: state.target_view, score: state.score, threshold: state.threshold, verdict: state.verdict,
+  };
+  mode = "hunt";
+  holdView = state.target_view;
+  say(`Scanning the anomaly map: ${boxes.length} candidate regions.`);
+}
+
+function onLock() {
+  const score = hunt.score.toFixed(4), threshold = hunt.threshold.toFixed(4);
+  if (hunt.verdict === "DEFECT") {
+    say(`Found it. Peak score ${score} is above ${threshold}. DEFECT: sending it to the pink bowl.`);
+  } else {
+    say(`Highest peak ${score} is under ${threshold}. GOOD block: sending it to the green bowl.`);
+  }
+  lastVerdict = { verdict: hunt.verdict, score: hunt.score, announcedDone: false };
+}
+
+function orbitPoint(now) {
+  const t = now / 1000;
+  return {
+    x: 0.5 + 0.26 * Math.cos(t * 1.4) + 0.05 * Math.cos(t * 4.1),
+    y: 0.5 + 0.20 * Math.sin(t * 1.4) + 0.05 * Math.sin(t * 3.3),
+  };
+}
+
+function boxCentre(box) {
+  return { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+}
+
+function updateAim(now, dt) {
+  let target;
+  if (mode === "orbit") target = orbitPoint(now);
+  else target = boxCentre(hunt.boxes[hunt.index]);
+
+  // Move a fixed fraction of the remaining distance each frame: smooth, and never overshoots.
+  const speed = mode === "orbit" ? 6 : 9;
+  const step = 1 - Math.exp(-speed * dt);
+  aim.x += (target.x - aim.x) * step;
+  aim.y += (target.y - aim.y) * step;
+
+  if (mode === "hunt") {
+    const distance = Math.hypot(target.x - aim.x, target.y - aim.y);
+    if (distance < 0.012) {
+      if (!hunt.arrivedAt) {
+        hunt.arrivedAt = now;
+        hunt.revealed = hunt.index + 1;  // show this box and its score
+      }
+      if (now - hunt.arrivedAt > DWELL_MS) {
+        if (hunt.index === hunt.boxes.length - 1) {
+          mode = "lock";
+          hunt.lockStart = now;
+          onLock();
+        } else {
+          hunt.index += 1;
+          hunt.arrivedAt = 0;
+        }
+      }
+    }
+  } else if (mode === "lock" && now - hunt.lockStart > LOCK_HOLD_MS) {
+    mode = "orbit";
+    hunt = null;
+    holdView = null;
+    lastSwitch = now;
+  }
+}
+
+// ---------------------------------------------------------------- camera switching
+function showView(view) {
+  currentView = view;
+  for (const v of VIEWS) $("cam-" + v).classList.toggle("on", v === view);
+  $("camLabel").textContent = `CAM ${VIEWS.indexOf(view) + 1}/3  ${VIEW_NAMES[view]}`;
+  $("flash").classList.remove("go");
+  void $("flash").offsetWidth;  // restarts the CSS animation
+  $("flash").classList.add("go");
+}
+
+function updateCamera(now) {
+  if (!started) return;
+  const picked = $("camSelect").value;
+  let wanted;
+  if (holdView) {
+    wanted = holdView;
+  } else if (picked !== "auto") {
+    wanted = picked;
+  } else {
+    if (now - lastSwitch > CYCLE_MS) {
+      cycleIndex = (cycleIndex + 1) % VIEWS.length;
+      lastSwitch = now;
+    }
+    wanted = VIEWS[cycleIndex];
+  }
+  if (wanted !== currentView) showView(wanted);
+}
+
+// ---------------------------------------------------------------- drawing the reticle and boxes
+function drawReticle(now) {
+  const W = reticle.width, H = reticle.height;
+  rctx.clearRect(0, 0, W, H);
+  if (!started) return;
+
+  const locked = mode === "lock";
+  const verdictColour = hunt && hunt.verdict === "DEFECT"
+    ? getComputedStyle(document.body).getPropertyValue("--defect")
+    : getComputedStyle(document.body).getPropertyValue("--good");
+  const green = getComputedStyle(document.body).getPropertyValue("--good");
+
+  // Candidate boxes, only on the camera they were found in.
+  if (hunt && currentView === hunt.view && hunt.revealed > 0) {
+    const shown = hunt.boxes.slice(0, hunt.revealed);
+
+    rctx.setLineDash([8, 7]);
+    rctx.strokeStyle = "rgba(255,255,255,.55)";
+    rctx.lineWidth = 2;
+    rctx.beginPath();
+    shown.forEach((box, i) => {
+      const c = boxCentre(box);
+      if (i === 0) rctx.moveTo(c.x * W, c.y * H);
+      else rctx.lineTo(c.x * W, c.y * H);
+    });
+    rctx.stroke();
+    rctx.setLineDash([]);
+
+    shown.forEach((box, i) => {
+      const isTarget = locked && i === hunt.boxes.length - 1;
+      const colour = isTarget ? verdictColour : green;
+      const x = box.x * W, y = box.y * H, w = box.w * W, h = box.h * H;
+      rctx.fillStyle = colour;
+      rctx.globalAlpha = 0.15;
+      rctx.fillRect(x, y, w, h);
+      rctx.globalAlpha = 1;
+      rctx.strokeStyle = colour;
+      rctx.lineWidth = isTarget ? 6 : 3;
+      rctx.strokeRect(x, y, w, h);
+      rctx.fillStyle = "rgba(255,255,255,.9)";
+      rctx.font = "22px Arial";
+      rctx.textAlign = "center";
+      rctx.textBaseline = "middle";
+      rctx.fillText(box.score.toFixed(4), x + w / 2, y + h / 2);
+
+      if (isTarget) {
+        const label = `${hunt.verdict}  ${hunt.score.toFixed(4)} ${hunt.verdict === "DEFECT" ? ">" : "<"} ${hunt.threshold.toFixed(4)}`;
+        rctx.font = "bold 24px 'Courier New', monospace";
+        const labelWidth = rctx.measureText(label).width + 20;
+        const labelX = Math.min(Math.max(x + w / 2 - labelWidth / 2, 8), W - labelWidth - 8);
+        const labelY = y > 60 ? y - 44 : y + h + 10;
+        rctx.fillStyle = colour;
+        rctx.fillRect(labelX, labelY, labelWidth, 34);
+        rctx.fillStyle = "#000";
+        rctx.textAlign = "left";
+        rctx.fillText(label, labelX + 10, labelY + 18);
+      }
+    });
+  }
+
+  // Crosshair lines through the aim point.
+  const px = aim.x * W, py = aim.y * H;
+  rctx.strokeStyle = "rgba(120,255,140,.35)";
+  rctx.lineWidth = 2;
+  rctx.beginPath();
+  rctx.moveTo(0, py); rctx.lineTo(W, py);
+  rctx.moveTo(px, 0); rctx.lineTo(px, H);
+  rctx.stroke();
+
+  // Ring: pulses while searching, closes around the box when locked.
+  let radius = 40 + 5 * Math.sin(now / 140);
+  if (locked) {
+    const box = hunt.boxes[hunt.boxes.length - 1];
+    const fitted = Math.hypot(box.w * W, box.h * H) / 2 + 10;  // circle drawn just outside the box
+    const progress = Math.min((now - hunt.lockStart) / 400, 1);
+    radius = 90 + (fitted - 90) * progress;
+  }
+  rctx.strokeStyle = locked ? verdictColour : "rgba(140,255,160,.95)";
+  rctx.lineWidth = 3;
+  rctx.beginPath();
+  rctx.arc(px, py, radius, 0, Math.PI * 2);
+  rctx.stroke();
+  rctx.beginPath();  // four ticks around the ring
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    rctx.moveTo(px + dx * (radius + 4), py + dy * (radius + 4));
+    rctx.lineTo(px + dx * (radius + 18), py + dy * (radius + 18));
+  }
+  rctx.stroke();
+
+  if (!locked) {  // hide the dot when locked so the box's score stays readable
+    rctx.fillStyle = "#ff9d1c";
+    rctx.beginPath();
+    rctx.arc(px, py, 6, 0, Math.PI * 2);
+    rctx.fill();
+  }
+
+  rctx.fillStyle = "rgba(200,255,210,.95)";
+  rctx.font = "18px 'Courier New', monospace";
+  rctx.textAlign = px > W - 220 ? "right" : "left";
+  rctx.textBaseline = "alphabetic";
+  const offset = px > W - 220 ? -(radius + 12) : radius + 12;
+  rctx.fillText(`${aim.x.toFixed(3)}, ${aim.y.toFixed(3)}`, px + offset, py - 10);
+}
+
+function updateHud() {
+  if (!started) return;
+  const time = new Date();
+  $("hud-tr").textContent = time.toTimeString().slice(0, 8) + "." + String(time.getMilliseconds()).padStart(3, "0").slice(0, 2);
+  let status;
+  if (mode === "hunt") {
+    const box = hunt.boxes[Math.max(hunt.revealed - 1, 0)];
+    status = `HONING IN  ${hunt.revealed}/${hunt.boxes.length}  ${hunt.revealed ? box.score.toFixed(4) : ""}`;
+  } else if (mode === "lock") {
+    status = `TARGET LOCKED  ${hunt.verdict}`;
+  } else if (serverState.stage === "perceive") {
+    status = "SCANNING...";
+  } else if (lastVerdict) {
+    status = `LAST BLOCK: ${lastVerdict.verdict} ${lastVerdict.score.toFixed(4)}  ${(serverState.message || "").toUpperCase()}`;
+  } else {
+    status = (serverState.message || "STANDBY").toUpperCase();
+  }
+  $("hud-bl").textContent = status;
+}
+
+// ---------------------------------------------------------------- drifting binary digits
+// Bits canvas sits 60px left of and 18px above the hero, so the hero is at (60, 18) inside it.
+const HERO_IN_BITS = { x: 60, y: 18, w: 456, h: 342 };
+const bands = [];
+for (let i = 0; i < 12; i++) {
+  bands.push({
+    y: 20 + Math.random() * 344,
+    speed: 15 + Math.random() * 45,
+    offset: Math.random() * 600,
+    size: 12 + Math.random() * 10,
+    alpha: 0.12 + Math.random() * 0.4,
+    digits: Array.from({ length: 34 }, () => (Math.random() < 0.5 ? "0" : "1")),
+  });
+}
+
+function drawBits(dt) {
+  const W = bits.width, H = bits.height;
+  bctx.clearRect(0, 0, W, H);
+  bctx.save();
+  if (started) {
+    // Once live, keep the digits outside the video so the picture and HUD stay readable.
+    const r = HERO_IN_BITS;
+    bctx.beginPath();
+    bctx.rect(0, 0, W, H);
+    bctx.rect(r.x, r.y, r.w, r.h);
+    bctx.clip("evenodd");
+  }
+  bctx.shadowColor = "rgba(210,230,255,.9)";
+  bctx.shadowBlur = 8;
+  for (const band of bands) {
+    band.offset = (band.offset + band.speed * dt) % 600;
+    if (Math.random() < 0.02) {
+      const i = Math.floor(Math.random() * band.digits.length);
+      band.digits[i] = band.digits[i] === "0" ? "1" : "0";
+    }
+    bctx.font = `bold ${band.size}px Arial`;
+    bctx.fillStyle = `rgba(220,235,255,${band.alpha})`;
+    const spacing = band.size * 1.6;
+    band.digits.forEach((digit, i) => {
+      const x = ((i * spacing + band.offset) % (W + 40)) - 20;
+      bctx.fillText(digit, x, band.y);
+    });
+  }
+  bctx.restore();
+}
+
+// ---------------------------------------------------------------- main animation loop
+let previous = performance.now();
+function frame(now) {
+  const dt = Math.min((now - previous) / 1000, 0.1);
+  previous = now;
+  updateCamera(now);
+  updateAim(now, dt);
+  drawReticle(now);
+  updateHud();
+  drawBits(dt);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
