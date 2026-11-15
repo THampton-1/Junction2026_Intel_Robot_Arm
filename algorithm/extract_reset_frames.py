@@ -17,11 +17,12 @@ sitting at reset before it moves):
 Step 2 - extract the photos:
 
     python algorithm/extract_reset_frames.py <dataset_dir> --out inspection_frames \
-        --crop 40 110 70 70
+        --crop 58 125 56 56
 
 Output: <out>/full/epXXX_photoN.png, <out>/crop/epXXX_photoN.png (if --crop), and
 <out>/photos.csv listing episode, photo number, frame index and timestamp for each photo.
-Photo 1 is the block as first squared; photo N is after N-1 clockwise rotations.
+Recorded episodes hold one rotation each (grasp, rotate, release, back to reset), so each
+gives one photo: the block after that episode's rotation.
 
 Needs: pandas + pyarrow (to read the parquet files) and the ffmpeg command-line tool
 (to decode single frames from the AV1/H.264 episode videos).
@@ -63,7 +64,7 @@ def parse_args():
     parser.add_argument("--camera", default="side_view", help="camera name, matched against the video feature names")
     parser.add_argument("--episodes", type=int, nargs="*", help="episode indices to process (default: all)")
     parser.add_argument("--crop", type=int, nargs=4, metavar=("X", "Y", "W", "H"), help="fixed crop box in pixels")
-    parser.add_argument("--expected-photos", type=int, default=5, help="warn when an episode gives a different count")
+    parser.add_argument("--expected-photos", type=int, default=1, help="warn when an episode gives a different count")
     parser.add_argument("--tolerance", type=float, default=TOLERANCE)
     parser.add_argument("--exit-margin", type=float, default=EXIT_MARGIN)
     parser.add_argument("--hold-frames", type=int, default=HOLD_FRAMES)

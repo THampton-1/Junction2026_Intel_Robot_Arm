@@ -1,10 +1,12 @@
 # Inspection photo trigger (reset pose X)
 
 Takes one side-camera photo each time the arm parks at the marked **reset pose X** after
-releasing the block. With the routine *square block → reset → 4 × (grasp, rotate 90°
-clockwise, release → reset)* that gives 5 photos per cycle. Photo 1 is the block as first
-squared, and photo *n* is after *n − 1* rotations. Photos 1 and 5 show the same face, which
-gives a free consistency check on the anomaly score.
+releasing the block. Each recorded episode is one rotation (grasp, rotate, release, back to
+reset), so each episode gives one photo of the block's newly exposed face. Run live through
+the full routine, it gives one photo per rotation.
+
+The claw is in the side camera's view at X, so photos must use the tight crop below. See
+[Checked on a real episode](#checked-on-a-real-episode).
 
 The same `ResetPoseTrigger` runs offline on recorded episodes (to build training crops)
 and live on the robot, so training and runtime photos are chosen by the same rule.
@@ -36,6 +38,7 @@ Each frame, with `d` = the largest |joint − X| over the checked joints:
 | `extract_reset_frames.py` | Runs the trigger over recorded LeRobot episodes (v2.x or v3.x) and saves the photo frames plus an optional fixed crop. Needs pandas, pyarrow and the `ffmpeg` command. |
 | `test_reset_pose_trigger.py` | 11 tests on synthetic joint traces (near-miss, jitter, retries, quick pass-through, ...). |
 | `reset_pose.json` | X itself. Created by step 1 below. |
+| `episode_check/` | Frames from the first real episode, used to check the trigger and the crop. |
 
 ## Using it
 
@@ -45,13 +48,13 @@ Each frame, with `d` = the largest |joint − X| over the checked joints:
 python algorithm/extract_reset_frames.py <dataset_dir> --estimate-reset-pose
 
 # 2. Extract photos (crop box is x y w h in side_view pixels around the centre spot)
-python algorithm/extract_reset_frames.py <dataset_dir> --out inspection_frames --crop 40 110 70 70
+python algorithm/extract_reset_frames.py <dataset_dir> --out inspection_frames --crop 58 125 56 56
 
 # Tests
 python -m unittest discover -s algorithm -v
 ```
 
-Any episode that doesn't give exactly `--expected-photos` (default 5) is listed at the end
+Any episode that doesn't give exactly `--expected-photos` (default 1) is listed at the end
 for checking by eye.
 
 Live, in the control loop:
@@ -63,19 +66,35 @@ trigger = ResetPoseTrigger(load_reset_pose("algorithm/reset_pose.json"))
 while running:
     joint_state = read_follower_joints()   # dict: "shoulder_pan" -> position, same units as recording
     if trigger.update(joint_state):
-        photo = side_camera.read()         # arm is parked at X, block is squared and still
+        photo = side_camera.read()         # arm is parked at X; crop to 58 125 56 56
 ```
 
-## Check on the first real episode
+## Checked on a real episode
 
-1. **Units.** ±10 is in the units of `observation.state`. If those are normalised (−100…100),
-   10 is about 5% of a joint's range. If they are raw servo ticks (0–4095), 10 is under 1°
-   and far too tight. Look at the numbers before trusting the default.
-2. **The tolerance box only holds near X.** Make sure no working pose comes within ±10 of X
-   on all four joints at once. The tests use a reset pose far from the table, which holds
-   if the reset position is clearly above and back from the work area.
-3. **Crop box.** Measure it once from a real side_view frame of the squared block.
+One teleoperated rotation episode (1064 frames, 35.5 s, side_view H.264 320×240 @ 30 fps).
+Images are in `episode_check/`.
 
-Tested so far on synthetic data only: the trigger logic (unit tests), plus a fake v2.1 and
-v3.0 dataset where every one of 60 extracted images was confirmed to be the exact intended
-video frame.
+- **Units are normalised −100…100** (the gripper is 0…100), so ±10 is 5% of each joint's
+  range. The default stands.
+- **X** (from frame 0): `shoulder_pan` −4.99, `shoulder_lift` −99.83, `elbow_flex` 99.27,
+  `wrist_flex` 76.26. The arm finished 3.1 off in `shoulder_pan` and 0.6 off in `wrist_flex`,
+  well inside ±10. It finished with `wrist_roll` about 5 different, which doesn't matter
+  because that joint isn't checked.
+- **Trigger timeline** (traced by hand from the joint values): it arms at frame 99, when
+  `shoulder_lift` goes more than 15 from X on the way out. Nothing comes near X while the
+  arm works over the block. On the way back, `elbow_flex` reaches 89.46 at frame 1007
+  (9.8 from X), the other three joints are already inside, and the trigger **fires at
+  frame 1011 (34.0 s)**. That is one photo for the episode, as expected. The operator paused
+  there with the elbow about 10 short before settling at frame 1032; the ±10 box is what
+  lets that pause count.
+- **The claw is in the camera's view at X.** Its tips sit just left of the block (see
+  `key_frames.jpg`, first and last tiles). The arm is only fully out of the view between
+  roughly frames 930 and 970, while it is raised on the way back
+  (`return_frames_870_1060.jpg`).
+- **A tight crop removes the claw.** The crop `58 125 56 56` contains only the block at
+  frames 0, 950, 1011 and 1063 (`tight_crops.png`). The claw tips stop about 11 px left of
+  the crop. If the block's spot or the camera moves, re-measure the crop.
+
+Also tested on synthetic data: the trigger logic (unit tests), plus a fake v2.1 and v3.0
+dataset where every one of 60 extracted images was confirmed to be the exact intended video
+frame.
