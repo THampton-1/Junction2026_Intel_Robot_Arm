@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adapt · Photo trigger &amp; crop</title>
+<meta name="description" content="The reset-pose photo trigger and the fixed inspection crop that turn raw robot recordings into clean training photos.">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main>
+  <h1>Photo trigger &amp; crop</h1>
+  <div class="pagestatus"><span class="pill ok">Write-up drafted</span><span class="pill ok">Evidence strong</span></div>
+  <p class="lede">The defect model is only as good as its photos. Two small algorithms decide which video frame
+  becomes the photo, and which pixels of it the model sees. The same code builds the training photos and was
+  meant to run live, so training and live photos follow one rule.</p>
+
+  <h2>When to take the photo</h2>
+  <p>Each rotation ends with the arm parked at a <b>reset pose X</b>. That moment is the photo. X is the median start pose
+  of the ten recorded rotations. The trigger watches the four joints that place the arm in the camera's view
+  (shoulder pan, shoulder lift, elbow, wrist flex). Let <i>d</i> be the largest gap between any of them and X.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Step</th><th>Condition</th><th>Why</th></tr>
+    <tr><td>Arm</td><td><i>d</i> &gt; 15 at some point since the last photo</td><td>The arm must actually leave before it can come back. A block resting at X at the start is not a photo.</td></tr>
+    <tr><td>In pose</td><td><i>d</i> ≤ 10</td><td>Lets a policy that only gets <i>close</i> to X still trigger the photo.</td></tr>
+    <tr><td>Fire</td><td>In pose for 5 frames in a row (0.17 s), then disarm</td><td>Ignores a quick pass through the pose. The gap between 10 and 15 stops jitter firing twice.</td></tr>
+  </table></div>
+  <p>Joint values are normalised to −100…100, so ±10 is 5% of each joint's range.</p>
+
+  <h3>Tested on the real recordings</h3>
+  <div class="grid">
+    <div class="tile"><div class="num">10 / 10</div><div class="lbl">rotations gave exactly one photo</div></div>
+    <div class="tile"><div class="num">1–2 s</div><div class="lbl">before each recording ended: the photo fires as the arm settles</div></div>
+    <div class="tile"><div class="num">11 / 11</div><div class="lbl">unit tests pass (near misses, jitter, retried grasps, quick passes)</div></div>
+  </div>
+  <p>The extracted photos are pixel-identical to the same frames decoded straight from the videos, so the trigger picks
+  exactly the frame it claims to.</p>
+
+  <h2>Which pixels to keep</h2>
+  <p>At the reset pose the claw tips are still in the side camera's view. If the claw ends up in the photo, its position
+  varies, and the model would score it as an anomaly. So every photo is cut to one fixed box:
+  <b>x 60, y 130, 54 × 49 pixels</b> of the 320 × 240 frame.</p>
+  <figure><img src="assets/img/crop_box.png" alt="Ten side-camera frames with the final crop box in cyan and an earlier looser box in yellow" loading="lazy">
+  <figcaption>All ten rotations. Cyan: the final crop. Yellow: the earlier, looser box, which let in more background.</figcaption></figure>
+  <p>The box was measured, not eyeballed. Each block's outline was found by colour across the ten photos (x 62–111,
+  y 132–176). That leaves 1–2 pixels of margin around every block, while the closest claw tip stops about 7 pixels short of the box.</p>
+  <figure><img src="assets/img/crops_10.png" alt="The ten cropped photos: each shows the whole block and no claw" loading="lazy">
+  <figcaption>The ten crops: the whole block every time, no claw.</figcaption></figure>
+  <p>A tight crop also helps the model directly. In a full frame a 3-pixel dot covers a fraction of one PatchCore
+  feature cell. Cropped and resized, it covers one or two cells.</p>
+
+  <h2>What we chose not to do</h2>
+  <p>We considered centring the crop on each block by its colour. We rejected it: wrong colour is one of the defects we
+  want to catch, so a colour-based crop could hide the very thing it should find. A fixed box treats every block the same.</p>
+
+  <div class="warn"><p><b>Not wired in.</b> The live control loop never used the trigger. It used a fixed timer and a gripper
+  check, and the gripper check reads the wrong events (it fires on "open" then "closed on nothing"). Using the trigger as
+  the end-of-rotation signal was step 7 of the integration plan.</p></div>
+
+  <p class="muted">Sources: <a data-src="algorithm/README.md"></a>, <a data-src="algorithm/reset_pose_trigger.py"></a>,
+  <a data-src="algorithm/test_reset_pose_trigger.py"></a>, <a data-src="algorithm/reset_pose.json"></a>.</p>
+</main>
+<script src="assets/site.js"></script>
+</body>
+</html>

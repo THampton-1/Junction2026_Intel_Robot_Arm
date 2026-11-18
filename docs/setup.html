@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adapt · Setup</title>
+<meta name="description" content="Hardware, cameras, software environments and the problems we fixed while setting up the station.">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main>
+  <h1>Setup</h1>
+  <div class="pagestatus"><span class="pill ok">Write-up drafted</span><span class="pill part">Evidence partial: no photo of the rig yet</span></div>
+  <p class="lede">Before any model could run, the station had to work as one system: two arms, three cameras, an
+  Intel AI laptop and a cloud GPU for training. Getting there took several fixes we'd now treat as standard practice.</p>
+
+  <h2>Hardware</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Part</th><th>What it is</th><th>Role</th></tr>
+    <tr><td>Robot laptop</td><td>Dell XPS 16, Intel Core Ultra X9 388H, Ubuntu</td><td>Runs everything at demo time</td></tr>
+    <tr><td>CPU</td><td>Performance and efficiency cores</td><td>The 30 Hz control loop and camera input</td></tr>
+    <tr><td>Integrated GPU</td><td>Intel Xe3, 12 cores</td><td>Fast model inference; Anomalib training</td></tr>
+    <tr><td>NPU</td><td>Intel AI Boost, 50 TOPS</td><td>Low-power inference (tested, not used in the final plan)</td></tr>
+    <tr><td>Follower arm</td><td>LeRobot SO-101 with claw</td><td>Does the work</td></tr>
+    <tr><td>Leader arm</td><td>LeRobot SO-101 handle</td><td>A person moves it to record demonstrations</td></tr>
+  </table></div>
+
+  <h3>Three cameras</h3>
+  <div class="grid">
+    <figure><img src="assets/img/cam_top_view.png" alt="Overhead view of the table with block and two bowls"><figcaption><b>Top</b>: Intel RealSense D415, 640×480</figcaption></figure>
+    <figure><img src="assets/img/cam_side_view.png" alt="Side view of the block on the table"><figcaption><b>Side</b>: tabletop webcam, 320×240. Became the inspection camera.</figcaption></figure>
+    <figure><img src="assets/img/cam_claw_cam.png" alt="View from the camera on the claw"><figcaption><b>Claw</b>: wrist camera, 320×240</figcaption></figure>
+  </div>
+  <p class="muted">The same moment from all three cameras: the first frame of a "Block to Green" demonstration.</p>
+
+  <h2>Software</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Environment</th><th>Contents</th><th>Used for</th></tr>
+    <tr><td>Physical AI Studio</td><td>Python 3.13, Intel's robot learning app (web UI), PyTorch for the Intel GPU, OpenVINO</td><td>Recording demonstrations, managing datasets, launching training, exporting models</td></tr>
+    <tr><td>Anomalib</td><td>Python 3.12, Anomalib 2.0, PyTorch for the Intel GPU, OpenVINO</td><td>Training and testing the defect model</td></tr>
+    <tr><td>Modal (cloud)</td><td>NVIDIA A10G GPU trainer connected to Studio</td><td>Training the arm policies</td></tr>
+  </table></div>
+  <p>Keeping these environments separate stopped library versions clashing. That had a cost later: no single environment could run the whole station (see <a href="integration.html">What happened</a>).</p>
+
+  <h2>Problems we fixed during setup</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+    <tr><td>Kernel error "Not enough bandwidth" when two cameras start</td><td>The side and claw cameras share a USB 2.0 hub. Two uncompressed 640×480 streams overflow it.</td><td>Run both at 320×240, 30 fps</td></tr>
+    <tr><td>Camera view spins forever in Studio</td><td>A dropped USB connection leaves stale shared-memory files behind</td><td>Delete them on every start (built into the start script)</td></tr>
+    <tr><td>Dataset loader crashes on video</td><td>Missing system video-decoding libraries</td><td>Install FFmpeg 8 libraries</td></tr>
+    <tr><td>Arms swap ports after re-plugging</td><td>Linux renumbers USB serial devices</td><td>Studio matches each arm by its hardware serial number</td></tr>
+  </table></div>
+  <p>We calibrated both arms once and saved the result so it could be restored in a second instead of redone.
+  That backup matters later: the hardware failure began when calibration had been removed during testing.</p>
+
+  <div class="todo"><p>Add a photo of the whole station: both arms, the three cameras, the bowls and the laptop.</p></div>
+  <p class="muted">Source: <a data-src="MASTER_PROJECT_CONTEXT.md"></a>, sections 2–4 and 8.</p>
+</main>
+<script src="assets/site.js"></script>
+</body>
+</html>

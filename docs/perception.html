@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adapt · Defect detection</title>
+<meta name="description" content="Three rounds of Anomalib PatchCore tests, the camera comparison, and the final side-view model that caught every visible dot defect.">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main>
+  <h1>Defect detection</h1>
+  <div class="pagestatus"><span class="pill ok">Write-up drafted</span><span class="pill ok">Evidence strong</span></div>
+  <p class="lede">We used Anomalib's PatchCore, which learns only from good blocks. Anything that looks unlike the
+  good examples scores high. Over three rounds of tests we picked a camera, then tightened the photo until the
+  model could see a dot a few pixels across.</p>
+
+  <div class="grid">
+    <div class="tile"><div class="num">1.00</div><div class="lbl">AUROC on the 23 test photos with a visible defect (0.961 on all 24)</div></div>
+    <div class="tile"><div class="num">15 / 15</div><div class="lbl">visible defects flagged at threshold 0.37</div></div>
+    <div class="tile"><div class="num">8 / 8</div><div class="lbl">good blocks passed</div></div>
+    <div class="tile"><div class="num">0.25</div><div class="lbl">gap between the highest good score and the lowest visible-defect score</div></div>
+  </div>
+
+  <h2>How PatchCore decides</h2>
+  <p>A pretrained network (Wide ResNet-50) turns each small patch of a photo into a feature vector. From the good
+  training photos PatchCore keeps a memory bank of these vectors. A new photo's score is how far its strangest
+  patch lies from its nearest neighbour in the bank. No defect examples are needed for training, which suited us:
+  we had plenty of good blocks and very few deliberately damaged ones.</p>
+
+  <h2>Three rounds of tests</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Test</th><th>Camera</th><th>What counted as a "defect"</th><th>Result</th><th>What we learned</th></tr>
+    <tr><td>1 (14 Nov)</td><td>Claw</td><td>A big block instead of a small one, as a stand-in</td><td>AUROC 1.00, but a gap of only 0.044</td><td>Separation was fragile. The worst case was a frame where the claw camera's auto-exposure drifted about 30% brighter.</td></tr>
+    <tr><td>2.1 (14 Nov)</td><td>All three, same photos</td><td>Big versus small block</td><td>Claw 0.943 (overlap), side 1.00, top 1.00</td><td>The side camera gave the widest margin. The claw camera failed outright.</td></tr>
+    <tr><td><b>3 (15 Nov), final</b></td><td>Side, tight crop</td><td>Real dark dots marked on block faces</td><td>AUROC 1.00 on visible defects</td><td>Cropping to the block and removing one bad training photo made small dots detectable.</td></tr>
+  </table></div>
+
+  <h3>Choosing the camera (Test 2.1)</h3>
+  <p>The same 25 demonstrations, scored by three separate models, one per camera. The "normalised gap" is the gap between
+  classes as a fraction of that run's score range, so it compares fairly across cameras.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Camera</th><th class="n">AUROC</th><th class="n">Highest good score</th><th class="n">Lowest defect score</th><th class="n">Normalised gap</th></tr>
+    <tr><td>Claw</td><td class="n">0.943</td><td class="n">0.824</td><td class="n">0.500</td><td class="n">−0.324 (overlap)</td></tr>
+    <tr><td><b>Side</b></td><td class="n"><b>1.000</b></td><td class="n">0.344</td><td class="n">0.500</td><td class="n"><b>+0.156</b></td></tr>
+    <tr><td>Top</td><td class="n">1.000</td><td class="n">0.397</td><td class="n">0.500</td><td class="n">+0.103</td></tr>
+  </table></div>
+  <div class="note"><p><b>Caveat.</b> This comparison used big versus small blocks, not dots. The top camera was never tried on
+  the dot task, so "side is best" is well supported for the stand-in defect and assumed for dots.</p></div>
+
+  <h2>The final model (Test 3)</h2>
+  <p>Every photo is taken with the arm parked at the same pose, then cropped to a fixed 54 × 49 pixel box around the
+  block (see <a href="algorithms.html">Photo trigger &amp; crop</a>). The model trained on 29 good crops across 5 block colours
+  and was tested on 8 good and 16 defective blocks it had never seen.</p>
+
+  <div class="chart" id="chart">
+    <div class="legend"><span class="normal">Good block (8)</span><span class="defect">Defective block (16)</span></div>
+    <svg id="scores" viewBox="0 0 720 210" role="img" aria-labelledby="chartTitle">
+      <title id="chartTitle">Anomaly scores for 24 test photos. All good blocks score at most 0.248. Every defective block with a visible defect scores at least 0.500. The threshold is 0.37.</title>
+    </svg>
+    <div class="tip" id="tip"></div>
+  </div>
+  <p class="muted">Hover or tap a dot to see the photo. Scores are Anomalib's normalised scores (0–1).</p>
+
+  <p><b>Threshold 0.37</b> is the midpoint between the highest good score (0.248) and the lowest visible-defect score (0.500).
+  We didn't use the model's built-in 0.5: one defect scores exactly 0.500, and Anomalib's rule is strictly "greater than",
+  so it would have called that block good.</p>
+  <p><b>One defect is invisible to this camera.</b> ep33 scores 0: its mark is on a face the side camera can't see, even
+  uncropped. Turning the block four times is meant to catch exactly this case.</p>
+  <p><b>One training photo was hurting.</b> ep05, a "good" yellow block, had a small dark dot on it, which taught the model
+  that small dots are normal. Removing it doubled the gap (0.127 → 0.252), and the smallest-dot defect's score rose from 0.50 to 0.73.</p>
+
+  <h3>All 24 test crops</h3>
+  <p class="muted">The model sees exactly these pixels. Verdicts use threshold 0.37. The highlighted tiles are the edge cases.</p>
+  <div class="crops" id="gallery"></div>
+
+  <h2>Limits we know about</h2>
+  <ul>
+    <li><b>The threshold was chosen on the test photos.</b> The same 24 photos set the threshold and measured the result, so expect slightly worse separation on new blocks.</li>
+    <li><b>Small numbers.</b> 29 training photos and 24 test photos. A gap of 0.25 is moderate, not large.</li>
+    <li><b>Speed not measured on the robot.</b> The final model ran at about 110 ms per photo on the training laptop's integrated GPU. An earlier model ran at 3.8 ms on the robot laptop's Xe3 GPU, but the final model was never benchmarked there.</li>
+    <li><b>Fixed geometry.</b> The crop is measured for this camera position and block spot. Move either and it must be re-measured.</li>
+  </ul>
+
+  <h2>Research we did not adopt</h2>
+  <p>We studied how to make tiny dots easier to see at 320 × 240: averaging several frames, band-pass filtering, upscaling the
+  crop. The main finding was that contrast stretching (CLAHE, histogram equalisation) makes dots <i>harder</i> to find, because it
+  amplifies noise as much as the dot. These ideas were only tested on synthetic images, and the simpler tight crop was enough.</p>
+
+  <p class="muted">Sources: <a data-src="anomalib/test_3/findings.md"></a>, <a data-src="anomalib/test_3/logs/side_view_no_ep05.log"></a>,
+  <a data-src="anomalib/test_2/Test 2.1/findings.md"></a>, <a data-src="anomalib/test_1/findings.md"></a>.</p>
+</main>
+<script src="assets/site.js"></script>
+<script>
+// Per-image scores from anomalib/test_3/logs/side_view_no_ep05.log (final run).
+const THRESHOLD = 0.37;
+const RESULTS = [
+  { ep: 25, kind: "normal", score: 0.0000 }, { ep: 26, kind: "normal", score: 0.0000 },
+  { ep: 27, kind: "normal", score: 0.0000 }, { ep: 28, kind: "normal", score: 0.0577 },
+  { ep: 29, kind: "normal", score: 0.0000 }, { ep: 30, kind: "normal", score: 0.2481 },
+  { ep: 31, kind: "normal", score: 0.0000 }, { ep: 32, kind: "normal", score: 0.0000 },
+  { ep: 33, kind: "defect", score: 0.0000, note: "Defect not visible from the side camera" },
+  { ep: 34, kind: "defect", score: 0.5000, note: "Exactly on Anomalib's own 0.5 line" },
+  { ep: 35, kind: "defect", score: 0.6425 }, { ep: 36, kind: "defect", score: 0.7363 },
+  { ep: 37, kind: "defect", score: 0.5166 }, { ep: 38, kind: "defect", score: 0.6115 },
+  { ep: 39, kind: "defect", score: 0.5696 }, { ep: 40, kind: "defect", score: 0.7015 },
+  { ep: 41, kind: "defect", score: 0.6755 }, { ep: 42, kind: "defect", score: 0.6997 },
+  { ep: 43, kind: "defect", score: 0.8472 }, { ep: 44, kind: "defect", score: 0.6822 },
+  { ep: 45, kind: "defect", score: 0.7276 }, { ep: 46, kind: "defect", score: 0.7576 },
+  { ep: 47, kind: "defect", score: 0.5386 }, { ep: 48, kind: "defect", score: 0.5569 },
+];
+
+function imagePath(r) {
+  const folder = r.kind === "normal" ? "normal" : "abnormal";
+  return `assets/crops/${folder}/theo_v2_ep${r.ep}.png`;
+}
+function verdict(r) {
+  return r.score >= THRESHOLD ? "DEFECT" : "GOOD";
+}
+
+// ---- strip chart: one row per class, score on the x axis
+const svg = document.getElementById("scores");
+const NS = "http://www.w3.org/2000/svg";
+const LEFT = 120, RIGHT = 700, R = 7;
+const ROWS = { normal: { y: 60, label: "Good blocks" }, defect: { y: 140, label: "Defective blocks" } };
+const x = (score) => LEFT + score * (RIGHT - LEFT);
+
+function el(name, attrs, text) {
+  const node = document.createElementNS(NS, name);
+  for (const key in attrs) node.setAttribute(key, attrs[key]);
+  if (text !== undefined) node.textContent = text;
+  svg.appendChild(node);
+  return node;
+}
+
+// Grid lines and axis labels every 0.1
+for (let i = 0; i <= 10; i++) {
+  const gx = x(i / 10);
+  const g = el("g", { class: "grid" });
+  const line = document.createElementNS(NS, "line");
+  line.setAttribute("x1", gx); line.setAttribute("x2", gx);
+  line.setAttribute("y1", 20); line.setAttribute("y2", 175);
+  g.appendChild(line);
+  const t = el("text", { x: gx, y: 195, "text-anchor": "middle", class: "lab" }, (i / 10).toFixed(1));
+}
+el("text", { x: RIGHT, y: 208, "text-anchor": "end", class: "lab" }, "anomaly score →");
+for (const kind in ROWS) {
+  el("text", { x: 0, y: ROWS[kind].y + 4, class: "lab" }, ROWS[kind].label);
+}
+
+// Threshold line with its label
+el("line", { x1: x(THRESHOLD), x2: x(THRESHOLD), y1: 14, y2: 178, class: "thr" });
+el("text", { x: x(THRESHOLD) + 6, y: 14, class: "lab" }, "threshold 0.37");
+
+// Place dots; when two would overlap, move the later one up or down a step.
+const placed = { normal: [], defect: [] };
+const tip = document.getElementById("tip");
+const chart = document.getElementById("chart");
+
+for (const r of [...RESULTS].sort((a, b) => a.score - b.score)) {
+  const cx = x(r.score);
+  const offsets = [0, -1, 1, -2, 2, -3, 3];
+  let cy = ROWS[r.kind].y;
+  for (const step of offsets) {
+    const tryY = ROWS[r.kind].y + step * (2 * R + 2);
+    let clash = false;
+    for (const p of placed[r.kind]) {
+      if (Math.hypot(p.x - cx, p.y - tryY) < 2 * R + 1) clash = true;
+    }
+    if (!clash) { cy = tryY; break; }
+  }
+  placed[r.kind].push({ x: cx, y: cy });
+
+  // Defects are drawn as squares and good blocks as circles, so shape carries the class as well as colour.
+  let dot;
+  if (r.kind === "normal") {
+    dot = el("circle", { cx, cy, r: R, class: "dot normal", tabindex: 0 });
+  } else {
+    dot = el("rect", { x: cx - R, y: cy - R, width: 2 * R, height: 2 * R, rx: 2, class: "dot defect", tabindex: 0 });
+  }
+  dot.setAttribute("aria-label", `ep${r.ep}, ${r.kind === "normal" ? "good" : "defective"}, score ${r.score.toFixed(3)}`);
+
+  const show = () => {
+    tip.innerHTML =
+      `<img src="${imagePath(r)}" alt="">` +
+      `<div><b>ep${r.ep}</b> · ${r.kind === "normal" ? "good block" : "defective block"}</div>` +
+      `<div>score ${r.score.toFixed(3)} → <b>${verdict(r)}</b></div>` +
+      (r.note ? `<div class="muted">${r.note}</div>` : "");
+    tip.style.display = "block";
+    const box = chart.getBoundingClientRect();
+    const scale = box.width / 720;
+    let left = cx * scale + 14;
+    if (left + 170 > box.width) left = cx * scale - 184;
+    tip.style.left = left + "px";
+    tip.style.top = Math.max(cy * scale - 60, 0) + "px";
+  };
+  const hide = () => { tip.style.display = "none"; };
+  dot.addEventListener("mouseenter", show);
+  dot.addEventListener("focus", show);
+  dot.addEventListener("click", show);
+  dot.addEventListener("mouseleave", hide);
+  dot.addEventListener("blur", hide);
+}
+
+// ---- gallery of all 24 crops
+const gallery = document.getElementById("gallery");
+for (const r of RESULTS) {
+  const tile = document.createElement("div");
+  tile.className = "crop" + (r.note || r.ep === 30 ? " flag" : "");
+  const truth = r.kind === "normal" ? "good" : "defect";
+  tile.innerHTML =
+    `<img src="${imagePath(r)}" alt="Crop of test block ep${r.ep}" loading="lazy">` +
+    `<div><b>ep${r.ep}</b> · ${truth}</div>` +
+    `<div>${r.score.toFixed(3)} → ${verdict(r)}</div>`;
+  gallery.appendChild(tile);
+}
+</script>
+</body>
+</html>

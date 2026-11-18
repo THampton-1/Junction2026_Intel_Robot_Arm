@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adapt · Overview</title>
+<meta name="description" content="An SO-101 robot arm that inspects Duplo blocks for defects: what we built at Junction 2026, what worked, and what didn't.">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main>
+  <h1>Adapt: a robot arm that inspects blocks for defects</h1>
+  <p class="lede">At Junction 2026 our team of four had about two days to build a closed-loop inspection cell on
+  Intel hardware: an SO-101 arm turns a Duplo block, a camera checks each face for defects, and the arm sorts
+  the block into a good bowl or a defect bowl. We built and tested each part. We did not get the full loop
+  running on the robot before the hardware failed.</p>
+
+  <div class="grid">
+    <div class="tile"><div class="num">15 / 15</div><div class="lbl">visible dot defects caught by the final model, with 8 / 8 good blocks passed</div></div>
+    <div class="tile"><div class="num">10 / 10</div><div class="lbl">recorded rotations where the photo trigger fired exactly once</div></div>
+    <div class="tile"><div class="num">289</div><div class="lbl">teleoperated demonstrations across 14 datasets, 3 cameras each</div></div>
+    <div class="tile"><div class="num">3</div><div class="lbl">ACT arm policies trained and exported: rotate, place green, place pink</div></div>
+  </div>
+
+  <h2>The loop we set out to build</h2>
+  <div class="pipeline">
+    <div class="step"><b>1 · Perceive</b>The arm parks; the side camera photographs one face of the block.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>2 · Detect</b>An Anomalib PatchCore model scores a tight crop of the photo. Score ≥ 0.37 means defect.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>3 · Rotate</b>An ACT policy grasps the block, turns it 90° and returns. Repeat for all four faces.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>4 · Sort</b>Any defect: an ACT policy places it in the pink bowl. Otherwise the green bowl.</div>
+  </div>
+  <p>Every model was meant to run locally through OpenVINO on an Intel Core Ultra laptop, using its CPU, integrated GPU and NPU.</p>
+
+  <h2>The story</h2>
+  <div class="grid two">
+    <div class="card"><h3><a href="setup.html">Setup</a></h3>Robot laptop, two arms, three cameras, three Python environments and a cloud trainer, all working together.</div>
+    <div class="card"><h3><a href="perception.html">Defect detection</a></h3>Three rounds of Anomalib tests. The side camera won, and a tight crop let the model see small dots.</div>
+    <div class="card"><h3><a href="motion.html">Arm motion</a></h3>Imitation learning (ACT) from teleoperated demonstrations: one policy to rotate the block, two to place it.</div>
+    <div class="card"><h3><a href="algorithms.html">Photo trigger &amp; crop</a></h3>When to take the photo and which pixels to keep, measured on real recordings.</div>
+    <div class="card"><h3><a href="integration.html">What happened</a></h3>Joining the parts failed. An AI agent did the integration without a tested plan, and the arm's power supply browned out.</div>
+    <div class="card"><h3><a href="reflection.html">On reflection</a></h3>The architecture we would build now, and what we'd do differently as beginners. <span class="pill part">Draft</span></div>
+  </div>
+
+  <h2>Site status: where we are up to</h2>
+  <p class="muted">This table is for the team while we build the site. Remove it before sharing widely.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Page</th><th>Write-up</th><th>Evidence</th><th>Still needed</th></tr>
+    <tr><td>Setup</td><td><span class="pill ok">Drafted</span></td><td><span class="pill part">Partial</span></td><td>A photo of the full rig (arms, cameras, bowls, laptop).</td></tr>
+    <tr><td>Defect detection</td><td><span class="pill ok">Drafted</span></td><td><span class="pill ok">Strong</span></td><td>Speed of the final model measured on the robot laptop.</td></tr>
+    <tr><td>Arm motion</td><td><span class="pill ok">Drafted</span></td><td><span class="pill part">Partial</span></td><td>Video of a trained policy moving the arm on its own; training loss or results.</td></tr>
+    <tr><td>Photo trigger &amp; crop</td><td><span class="pill ok">Drafted</span></td><td><span class="pill ok">Strong</span></td><td>Nothing essential.</td></tr>
+    <tr><td>What happened</td><td><span class="pill part">Needs team review</span></td><td><span class="pill part">Partial</span></td><td>The team's own account of the integration session; times; any photos.</td></tr>
+    <tr><td>On reflection</td><td><span class="pill part">Draft outline</span></td><td><span class="pill ok">n/a</span></td><td>Team discussion of the lessons.</td></tr>
+    <tr><td>Live demo (Adapt page)</td><td><span class="pill miss">Not built</span></td><td><span class="pill part">Partial</span></td><td>The team's demo page needs its Python server, so it can't run on GitHub Pages. A replay version using the real test photos would work.</td></tr>
+  </table></div>
+
+  <h2>Team</h2>
+  <p>Christina Zhou, Lucas Kiewek, Siongan and Theo Hampton.</p>
+  <div class="todo"><p>Add one line per person on what they owned. Known so far: Theo, the Anomalib defect model, the photo trigger and crop, and this site. Lucas, dataset exports and the desktop station app.</p></div>
+</main>
+<script src="assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adapt · On reflection</title>
+<meta name="description" content="The architecture we would build now, and the lessons we'd take into the next hardware project.">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main>
+  <h1>On reflection</h1>
+  <div class="pagestatus"><span class="pill part">Draft outline for team discussion</span></div>
+  <p class="lede">With the pieces built and the failure understood, this is the system we'd now build, and what we'd tell
+  ourselves at the start.</p>
+
+  <h2>The architecture, now that we can see it</h2>
+  <p>One program, the station, owns every camera and the arm. Physical AI Studio is a build tool used offline: it records,
+  trains and exports models, and never runs during the demo. The website only watches.</p>
+  <pre class="mermaid">
+flowchart LR
+  subgraph OFF["Offline: build the models"]
+    TELE["Teleoperated demos<br/>(Physical AI Studio)"] --> ACT["ACT training<br/>(Modal A10G)"]
+    TELE --> TRIG["Photo trigger + crop"] --> PC["PatchCore training"]
+  end
+  subgraph LIVE["Live: one process owns the hardware"]
+    CAM["3 cameras"] --> FSM["Control loop<br/>30 Hz state machine"]
+    ARM["SO-101 arm"] <--> FSM
+    FSM --> OVA["ACT policies<br/>OpenVINO"]
+    FSM --> OVP["PatchCore<br/>OpenVINO on Xe3"]
+    FSM -- "frames + verdicts" --> WEB["Website<br/>(view only)"]
+  end
+  ACT -- "exported model files" --> OVA
+  PC -- "exported model files" --> OVP
+  </pre>
+
+  <h3>The inspection cycle</h3>
+  <pre class="mermaid">
+stateDiagram-v2
+  [*] --> PHOTO : start, arm parked at X
+  PHOTO --> ROTATE : faces 1–3 scored
+  ROTATE --> PHOTO : reset-pose trigger fires
+  ROTATE --> STOP : timeout (missed grasp)
+  PHOTO --> SORT : face 4 scored
+  SORT --> [*] : pink if any face ≥ 0.37, else green
+  </pre>
+
+  <h3>The integration order we'd follow</h3>
+  <p>One joint at a time, each with a check that must pass before the next.</p>
+  <div class="tablewrap"><table>
+    <tr><th>#</th><th>Step</th><th>Check before moving on</th></tr>
+    <tr><td>0</td><td>Close Studio, clear stale locks, list the real camera devices</td><td>A tiny script reads one frame from each camera</td></tr>
+    <tr><td>1</td><td>One Python environment for the station</td><td>Every import succeeds</td></tr>
+    <tr><td>2</td><td>Copy in the final defect model, threshold and crop</td><td>A known-good block scores below 0.37 live</td></tr>
+    <tr><td>3</td><td>Print each ACT model's real inputs and outputs</td><td>No model falls back to mock mode</td></tr>
+    <tr><td>4</td><td>Fail loudly: refuse to start if any model is missing</td><td>Rename a model file; the app refuses to start</td></tr>
+    <tr><td>5</td><td>Park at the exact training pose</td><td>A live crop shows the whole block and no claw</td></tr>
+    <tr><td>6</td><td>Photo-first cycle</td><td>A dry run gives four inspections and the right bowl</td></tr>
+    <tr><td>7</td><td>Use the reset-pose trigger to end each rotation</td><td>A missed grasp times out instead of passing</td></tr>
+    <tr><td>8</td><td>Connect the website as a viewer</td><td>Pressing Enter on the page starts one cycle</td></tr>
+    <tr><td>9</td><td>Real trials, logged</td><td>Ten or more physical runs recorded, none invented</td></tr>
+  </table></div>
+
+  <h2>What we'd do differently</h2>
+  <div class="todo"><p>This list is a first draft. Each person should add their own lessons and cut any that don't fit.</p></div>
+  <div class="grid two">
+    <div class="card"><h3>Draw the system before building it</h3>Decide who owns each camera and port, and what each part hands the next, on day one. We wrote that down on the last night.</div>
+    <div class="card"><h3>Integrate in small, checked steps</h3>Join one part at a time with a pass/fail check. Never ask anyone, human or AI, to "bring it all together" in one go.</div>
+    <div class="card"><h3>Guard the hardware</h3>Speed and torque limits, a check that calibration is loaded before any move, and an easy power-off. Software mistakes become hardware damage.</div>
+    <div class="card"><h3>Treat AI agents like a new teammate</h3>Give a narrow task, review the changes, and commit what works. Don't let one edit vendor drivers on a live robot unsupervised.</div>
+    <div class="card"><h3>Fail loudly</h3>Our app quietly swapped in fake models when a real one was missing, so it looked alive while doing nothing.</div>
+    <div class="card"><h3>Commit as you go</h3>The session's fixes were lost in a revert because they were never saved.</div>
+    <div class="card"><h3>Never ship placeholder numbers</h3>A report generator filled in invented trial results, and they reached our slides as "15 physical trials". Label anything not measured.</div>
+    <div class="card"><h3>Measure on the target machine</h3>Our final model's speed was only measured on a different laptop.</div>
+    <div class="card"><h3>Use the cloud for training from the start</h3>Our first ACT run spent over 3½ hours on a laptop CPU before we moved it to a cloud GPU.</div>
+    <div class="card"><h3>One source of truth for settings</h3>Camera paths, thresholds and poses disagreed across three files.</div>
+  </div>
+</main>
+<script src="assets/site.js"></script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  mermaid.initialize({ startOnLoad: true, theme: dark ? "dark" : "neutral" });
+</script>
+</body>
+</html>
