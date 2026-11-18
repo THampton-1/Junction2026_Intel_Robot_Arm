@@ -3,52 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Adapt · Evidence</title>
-<meta name="description" content="Every claim on this site traced to a file: what we can show, what we must not use, and what is still missing.">
-<link rel="stylesheet" href="assets/site.css">
+<title>Adapt · For Junction 2026 Judges</title>
+<link rel="stylesheet" href="assets/retro.css">
 </head>
 <body>
-<main>
-  <h1>Evidence</h1>
-  <p class="lede">Every number on this site traced to a file in the repository, plus the numbers we found that can't be trusted.</p>
+<main id="content">
+  <h1>For Junction 2026 Judges</h1>
+  <p class="sub">every claim, traced to a file</p>
+  <div class="construction"><span>UNDER CONSTRUCTION</span></div>
 
-  <h2><span class="pill ok">Usable</span> What we can show</h2>
-  <div class="tablewrap"><table>
-    <tr><th>Claim</th><th>Evidence</th><th>Checked how</th></tr>
-    <tr><td>Final model: AUROC 0.961 (all 24), 1.00 without ep33; F1 0.933</td><td><a data-src="anomalib/test_3/logs/side_view_no_ep05.log"></a></td><td>Recomputed from the 24 per-image scores: (120 + 3) / 128 = 0.9609</td></tr>
-    <tr><td>Threshold 0.37 catches 15 / 15 visible defects and passes 8 / 8 good blocks</td><td><a data-src="anomalib/test_3/findings.md"></a></td><td>Midpoint of 0.248 and 0.500, checked against every score</td></tr>
-    <tr><td>Side camera beats claw and top (stand-in defect)</td><td><a data-src="anomalib/test_2/Test 2.1/findings.md"></a> and per-camera logs</td><td>AUROC values read from each log</td></tr>
-    <tr><td>Photo trigger: one photo in 10 / 10 rotations</td><td><a data-src="algorithm/README.md"></a></td><td>Unit tests re-run: 11 / 11 pass</td></tr>
-    <tr><td>Crop holds the whole block and no claw</td><td><a data-src="algorithm/episode_check/all_episodes_crops.png"></a></td><td>Images inspected</td></tr>
-    <tr><td>289 demonstrations, 867 videos, 14 datasets</td><td><a data-src="datasets/90_degree_turn/README.md">datasets/</a></td><td>Episode folders counted</td></tr>
-    <tr><td>Three ACT policies exported to OpenVINO</td><td><a data-src="config.py"></a> lines 35–37</td><td>Three distinct model paths</td></tr>
-    <tr><td>ACT training set up on Modal A10G (5 epochs, about 2,765 steps)</td><td><a data-src="anomalib/test_2/screenshots/screenshot_2026-11-14_08-04-27.png">Studio screenshot</a></td><td>Screenshot; an estimate, not a finished run</td></tr>
-    <tr><td>Elbow supply fell from 12.4 V to 5.0 V</td><td><a data-src="HACKATHON_LOG.md"></a> section 7</td><td>Team log; no raw readings saved</td></tr>
-    <tr><td>Earlier claw model: 3.78 ms per photo on the Xe3 GPU</td><td><a data-src="anomalib/test_1/findings.md"></a></td><td>Measured on the robot laptop, but for the old model</td></tr>
-  </table></div>
-
-  <h2><span class="pill miss">Do not use</span> Numbers that look real but aren't</h2>
-  <div class="tablewrap"><table>
-    <tr><th>Claim</th><th>Where it appears</th><th>Why not</th></tr>
-    <tr><td>93.3% sorting accuracy over 15 physical trials</td><td><a data-src="reports/INTEL_CHALLENGE_METRICS.md"></a>, <a data-src="presentation.html"></a></td><td>The 15 trials are a hard-coded list in <a data-src="scripts/benchmark_and_telemetry.py">the benchmark script</a> (line 423), written in when no real trials exist. No physical trials were logged.</td></tr>
-    <tr><td>16.5 W power draw</td><td>Same report</td><td>A fallback constant returned when the power sensor can't be read (line 109).</td></tr>
-    <tr><td>Defect heatmap, score 1.000</td><td><a data-src="reports/defect_heatmap.png"></a></td><td>A full side-camera frame scored by the old claw-camera model. It lights up the claw and bowl, not a defect.</td></tr>
-    <tr><td>Cycle runs of 2.7–3.2 s</td><td><a data-src="runs/run_20261114_185304/summary.json">runs/</a></td><td>Mock or replayed runs: a real rotation takes about 30 s.</td></tr>
-    <tr><td>"100% success rate"; "codebase pristine and fully functional"</td><td><a data-src="HACKATHON_LOG.md"></a></td><td>The test ran in mock mode with no robot, and the described fixes aren't in the code.</td></tr>
-    <tr><td>Final model latency 110 ms</td><td>Test 3 log</td><td>Real, but measured on the training laptop, not the robot. Fine to quote with that label.</td></tr>
-  </table></div>
-  <div class="warn"><p>The team's <code>presentation.html</code> includes the 93.3% slide. Fix it before anyone presents or shares it.</p></div>
-
-  <h2><span class="pill part">Missing</span> Worth finding</h2>
-  <ul>
-    <li>Video of a trained ACT policy moving the arm by itself (phones, Studio recordings)</li>
-    <li>ACT training loss or results from Studio or Modal</li>
-    <li>A photo of the full station, and of the hardware after the failure</li>
-    <li>Each person's account of the integration session, with rough times</li>
-    <li>The final model's speed measured on the robot laptop</li>
-    <li>Which dataset version trained each final policy</li>
-  </ul>
+  <section class="slot">
+    <h2>What we can show</h2>
+    <p class="hint">Table: claim, file, how it was checked.</p>
+  </section>
+  <section class="slot">
+    <h2>Numbers we don't trust</h2>
+    <p class="hint">The seeded 93.3% trials, the 16.5 W constant, the misleading heatmap, the mock runs.</p>
+  </section>
+  <section class="slot">
+    <h2>Still missing</h2>
+    <p class="hint">Policy video, training loss, rig photo, team accounts, final-model speed on the robot.</p>
+  </section>
 </main>
-<script src="assets/site.js"></script>
+<script src="assets/retro.js"></script>
 </body>
 </html>

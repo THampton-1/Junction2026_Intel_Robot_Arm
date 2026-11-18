@@ -3,64 +3,323 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Adapt · Overview</title>
-<meta name="description" content="An SO-101 robot arm that inspects Duplo blocks for defects: what we built at Junction 2026, what worked, and what didn't.">
-<link rel="stylesheet" href="assets/site.css">
+<title>Adapt Live Inspection</title>
+<meta name="description" content="Adapt: the SO-101 block-inspection robot our team built at Junction 2026.">
+<style>
+  :root {
+    --blue: #0b30d8;
+    --blue-dark: #0622a0;
+    --blue-tab: #1d4dff;
+    --orange: #ff9d1c;
+    --text: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif; color: var(--text);
+    background: repeating-linear-gradient(to bottom, #0c33e0 0 2px, #0a2cc6 2px 4px);
+  }
+  a { color: var(--text); }
+
+  /* The page is laid out at a fixed 1000x700, like a 2000-era site, then scaled to fit the screen. */
+  #stage { position: absolute; left: 50%; top: 50%; width: 1000px; height: 700px; transform-origin: center; }
+
+  #leftcol {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 205px;
+    background: linear-gradient(to right, rgba(40,90,255,.35), rgba(40,90,255,0));
+  }
+
+  /* Top link bar */
+  #topbar {
+    position: absolute; left: 0; top: 0; width: 790px; height: 26px;
+    display: flex; gap: 92px; align-items: center; padding-left: 14px;
+    background: rgba(0, 10, 90, .35); font-size: 11px;
+  }
+  #topbar span::before, .nav::before {
+    content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--orange); margin-right: 6px; vertical-align: middle;
+  }
+
+  /* Logo tab, top right */
+  #logo {
+    position: absolute; right: 36px; top: 0; width: 180px; height: 80px;
+    background: var(--blue-tab); border-radius: 0 0 0 24px;
+    box-shadow: 3px 4px 0 var(--blue-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px; font-weight: bold; letter-spacing: -2px; text-decoration: none;
+  }
+  #logo b { color: var(--orange); }
+
+  /* Left navigation */
+  #nav { position: absolute; left: 14px; top: 42px; width: 180px; }
+  #camSelect {
+    width: 150px; font-size: 11px; padding: 2px; margin-bottom: 18px;
+    border: 2px inset #c0c0c0; background: #fff; color: #000;
+  }
+  .nav {
+    display: block; margin-bottom: 9px; padding: 4px 8px 4px 12px; font-size: 14px;
+    text-decoration: none; background: linear-gradient(to bottom, #2752f4, #0f37d6);
+    box-shadow: 3px 3px 0 var(--blue-dark);
+  }
+  .nav:hover { background: linear-gradient(to bottom, #3a63ff, #1b45e6); }
+  .nav.gap { margin-top: 30px; }
+
+  /* Headline */
+  #h1 { position: absolute; left: 240px; top: 62px; margin: 0; font-size: 42px; font-weight: 300; z-index: 3; }
+  #h2 { position: absolute; left: 430px; top: 108px; margin: 0; font-size: 26px; font-weight: 300; z-index: 3; }
+
+  /* Hero: three recorded camera feeds, shown one at a time */
+  #bits { position: absolute; left: 170px; top: 132px; width: 556px; height: 384px; pointer-events: none; z-index: 2; }
+  #hero {
+    position: absolute; left: 230px; top: 150px; width: 456px; height: 342px;
+    overflow: hidden; background: #000a40;
+  }
+  #hero video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    image-rendering: pixelated; opacity: 0; transition: opacity .25s;
+  }
+  #hero video.on { opacity: 1; }
+  #scanlines {
+    position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,.18) 0 1px, transparent 1px 3px);
+  }
+  #vignette { position: absolute; inset: 0; box-shadow: inset 0 0 40px 18px var(--blue); pointer-events: none; }
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  #flash.go { animation: flash .18s ease-out; }
+  @keyframes flash { from { opacity: .7; } to { opacity: 0; } }
+
+  .hud {
+    position: absolute; font: bold 11px "Courier New", monospace; letter-spacing: 1px;
+    text-shadow: 0 0 4px #000, 0 0 2px #000;
+  }
+  #hud-tl { left: 18px; top: 14px; }
+  #hud-tr { right: 18px; top: 14px; }
+  #hud-bl { left: 18px; bottom: 14px; }
+  #rec { color: #ff3333; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Right column: project data (replaces the old live chat) */
+  #data { position: absolute; left: 736px; top: 180px; width: 244px; font-size: 13px; line-height: 1.35; }
+  .arrow::before {
+    content: ""; display: inline-block; border: 5px solid transparent; border-left: 7px solid var(--orange);
+    margin-right: 6px; vertical-align: middle;
+  }
+  #dataTitle { font-size: 14px; font-weight: bold; text-decoration: underline; }
+  #log { margin: 10px 0; min-height: 230px; }
+  #log div { margin-bottom: 9px; }
+  #log b { color: #ffe08a; }
+  #more { font-size: 11px; opacity: .75; }
+
+  /* Bottom: the three pipeline stages */
+  #stages { position: absolute; left: 230px; top: 528px; width: 745px; display: flex; }
+  .stage { flex: 1; padding: 0 14px; border-left: 1px solid rgba(255,255,255,.35); position: relative; font-size: 11px; }
+  .stage:first-child { border-left: none; padding-left: 0; }
+  .stage::after {
+    content: ""; position: absolute; left: -3px; top: -8px; width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,.6);
+  }
+  .stage:first-child::after { display: none; }
+  .stage b { display: block; font-size: 12px; text-decoration: underline; margin-bottom: 3px; }
+  .stage.active b { color: #ffe08a; }
+  .stage.active .arrow::before { animation: blink .5s steps(1) infinite; }
+
+  #footer { position: absolute; right: 40px; top: 650px; font-size: 11px; }
+</style>
 </head>
 <body>
-<main>
-  <h1>Adapt: a robot arm that inspects blocks for defects</h1>
-  <p class="lede">At Junction 2026 our team of four had about two days to build a closed-loop inspection cell on
-  Intel hardware: an SO-101 arm turns a Duplo block, a camera checks each face for defects, and the arm sorts
-  the block into a good bowl or a defect bowl. We built and tested each part. We did not get the full loop
-  running on the robot before the hardware failed.</p>
+<div id="stage">
+  <div id="leftcol"></div>
 
-  <div class="grid">
-    <div class="tile"><div class="num">15 / 15</div><div class="lbl">visible dot defects caught by the final model, with 8 / 8 good blocks passed</div></div>
-    <div class="tile"><div class="num">10 / 10</div><div class="lbl">recorded rotations where the photo trigger fired exactly once</div></div>
-    <div class="tile"><div class="num">289</div><div class="lbl">teleoperated demonstrations across 14 datasets, 3 cameras each</div></div>
-    <div class="tile"><div class="num">3</div><div class="lbl">ACT arm policies trained and exported: rotate, place green, place pink</div></div>
+  <div id="topbar">
+    <span>Adapt.com</span><span>Contents</span><span>Search</span><span>Contact Us</span><span>Support</span>
+  </div>
+  <a id="logo" href="index.html">adapt<b>.</b></a>
+
+  <div id="nav">
+    <select id="camSelect" title="Pick a camera, or let it cycle">
+      <option value="auto">Select a Camera</option>
+      <option value="top">Top View</option>
+      <option value="side">Side View</option>
+      <option value="claw">Claw View</option>
+    </select>
+    <a class="nav" href="detection.html">Anomaly Scores</a>
+    <a class="nav" href="arm.html">Robot Arm</a>
+    <a class="nav" href="build.html">How We Built It</a>
+    <a class="nav" href="team.html">Our Team</a>
+    <a class="nav gap" href="happened.html">What Happened</a>
+    <a class="nav" href="reflection.html">On Reflection</a>
+    <a class="nav" href="evidence.html">For Junction 2026 Judges</a>
   </div>
 
-  <h2>The loop we set out to build</h2>
-  <div class="pipeline">
-    <div class="step"><b>1 · Perceive</b>The arm parks; the side camera photographs one face of the block.</div>
-    <div class="arrow">→</div>
-    <div class="step"><b>2 · Detect</b>An Anomalib PatchCore model scores a tight crop of the photo. Score ≥ 0.37 means defect.</div>
-    <div class="arrow">→</div>
-    <div class="step"><b>3 · Rotate</b>An ACT policy grasps the block, turns it 90° and returns. Repeat for all four faces.</div>
-    <div class="arrow">→</div>
-    <div class="step"><b>4 · Sort</b>Any defect: an ACT policy places it in the pink bowl. Otherwise the green bowl.</div>
+  <h1 id="h1">Making Inspection</h1>
+  <h2 id="h2">as Physical as Our AI</h2>
+
+  <div id="hero">
+    <!-- One recorded rotation (90_degree_turn, episode 0) from all three cameras, started together so they stay in step. -->
+    <video class="cam" id="cam-top"  src="assets/video/rotate_ep00_top.mp4"  autoplay muted loop playsinline></video>
+    <video class="cam" id="cam-side" src="assets/video/rotate_ep00_side.mp4" autoplay muted loop playsinline></video>
+    <video class="cam" id="cam-claw" src="assets/video/rotate_ep00_claw.mp4" autoplay muted loop playsinline></video>
+    <div id="scanlines"></div>
+    <div id="vignette"></div>
+    <div id="flash"></div>
+    <div class="hud" id="hud-tl"><span id="rec">&#9679; REC</span> <span id="camLabel"></span></div>
+    <div class="hud" id="hud-tr"></div>
+    <div class="hud" id="hud-bl">RECORDED DEMO · 90° TURN · EP 00</div>
   </div>
-  <p>Every model was meant to run locally through OpenVINO on an Intel Core Ultra laptop, using its CPU, integrated GPU and NPU.</p>
+  <canvas id="bits" width="556" height="384"></canvas>
 
-  <h2>The story</h2>
-  <div class="grid two">
-    <div class="card"><h3><a href="setup.html">Setup</a></h3>Robot laptop, two arms, three cameras, three Python environments and a cloud trainer, all working together.</div>
-    <div class="card"><h3><a href="perception.html">Defect detection</a></h3>Three rounds of Anomalib tests. The side camera won, and a tight crop let the model see small dots.</div>
-    <div class="card"><h3><a href="motion.html">Arm motion</a></h3>Imitation learning (ACT) from teleoperated demonstrations: one policy to rotate the block, two to place it.</div>
-    <div class="card"><h3><a href="algorithms.html">Photo trigger &amp; crop</a></h3>When to take the photo and which pixels to keep, measured on real recordings.</div>
-    <div class="card"><h3><a href="integration.html">What happened</a></h3>Joining the parts failed. An AI agent did the integration without a tested plan, and the arm's power supply browned out.</div>
-    <div class="card"><h3><a href="reflection.html">On reflection</a></h3>The architecture we would build now, and what we'd do differently as beginners. <span class="pill part">Draft</span></div>
+  <div id="data">
+    <div class="arrow"><span id="dataTitle">Inside Adapt</span></div>
+    <div id="log"></div>
+    <div id="more">[ More data coming soon ]</div>
   </div>
 
-  <h2>Site status: where we are up to</h2>
-  <p class="muted">This table is for the team while we build the site. Remove it before sharing widely.</p>
-  <div class="tablewrap"><table>
-    <tr><th>Page</th><th>Write-up</th><th>Evidence</th><th>Still needed</th></tr>
-    <tr><td>Setup</td><td><span class="pill ok">Drafted</span></td><td><span class="pill part">Partial</span></td><td>A photo of the full rig (arms, cameras, bowls, laptop).</td></tr>
-    <tr><td>Defect detection</td><td><span class="pill ok">Drafted</span></td><td><span class="pill ok">Strong</span></td><td>Speed of the final model measured on the robot laptop.</td></tr>
-    <tr><td>Arm motion</td><td><span class="pill ok">Drafted</span></td><td><span class="pill part">Partial</span></td><td>Video of a trained policy moving the arm on its own; training loss or results.</td></tr>
-    <tr><td>Photo trigger &amp; crop</td><td><span class="pill ok">Drafted</span></td><td><span class="pill ok">Strong</span></td><td>Nothing essential.</td></tr>
-    <tr><td>What happened</td><td><span class="pill part">Needs team review</span></td><td><span class="pill part">Partial</span></td><td>The team's own account of the integration session; times; any photos.</td></tr>
-    <tr><td>On reflection</td><td><span class="pill part">Draft outline</span></td><td><span class="pill ok">n/a</span></td><td>Team discussion of the lessons.</td></tr>
-    <tr><td>Live demo (Adapt page)</td><td><span class="pill miss">Not built</span></td><td><span class="pill part">Partial</span></td><td>The team's demo page needs its Python server, so it can't run on GitHub Pages. A replay version using the real test photos would work.</td></tr>
-  </table></div>
+  <div id="stages">
+    <div class="stage" id="st-0"><b class="arrow">Perceive</b>Three cameras: overhead RealSense, side webcam and claw cam.</div>
+    <div class="stage" id="st-1"><b class="arrow">Detect</b>Anomalib PatchCore scores a tight crop of each block face.</div>
+    <div class="stage" id="st-2"><b class="arrow">Act</b>ACT policies turn the block, then sort it into the green or pink bowl.</div>
+  </div>
 
-  <h2>Team</h2>
-  <p>Christina Zhou, Lucas Kiewek, Siongan and Theo Hampton.</p>
-  <div class="todo"><p>Add one line per person on what they owned. Known so far: Theo, the Anomalib defect model, the photo trigger and crop, and this site. Lucas, dataset exports and the desktop station app.</p></div>
-</main>
-<script src="assets/site.js"></script>
+  <div id="footer">*<a href="evidence.html">Built at Junction 2026</a> on <a href="build.html">Intel&reg; Core&trade; Ultra</a> &copy; 2026 Adapt</div>
+</div>
+
+<script>
+// ---------------------------------------------------------------- settings
+const VIEWS = ["top", "side", "claw"];
+const VIEW_NAMES = { top: "TOP VIEW", side: "SIDE VIEW", claw: "CLAW VIEW" };
+const CYCLE_MS = 4000;      // time on each camera while cycling
+
+// Facts shown in the right-hand panel. Every number here is checked (see the Evidence page).
+const FACTS = [
+  "<b>289</b> teleoperated demonstrations recorded, 3 cameras each",
+  "<b>15 / 15</b> visible dot defects caught, <b>8 / 8</b> good blocks passed",
+  "Photo trigger fired once in <b>10 / 10</b> recorded rotations",
+  "<b>3</b> ACT policies trained: rotate, place green, place pink",
+];
+
+const $ = (id) => document.getElementById(id);
+
+// ---------------------------------------------------------------- scale the page to the screen
+function fit() {
+  const scale = Math.min(innerWidth / 1000, innerHeight / 700);
+  $("stage").style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+addEventListener("resize", fit);
+fit();
+
+// ---------------------------------------------------------------- type the facts out one by one
+let factQueue = Promise.resolve();
+function typeLine(html) {
+  factQueue = factQueue.then(() => new Promise((done) => {
+    const line = document.createElement("div");
+    $("log").appendChild(line);
+    const plain = html.replace(/<[^>]+>/g, "");   // type the plain text, then swap in the bold version
+    let i = 0;
+    const timer = setInterval(() => {
+      i += 1;
+      line.textContent = plain.slice(0, i);
+      if (i >= plain.length) {
+        clearInterval(timer);
+        line.innerHTML = html;
+        setTimeout(done, 250);
+      }
+    }, 18);
+  }));
+}
+for (const fact of FACTS) typeLine(fact);
+
+// ---------------------------------------------------------------- camera switching
+let currentView = null;
+let cycleIndex = 0;
+let lastSwitch = performance.now();
+
+function showView(view) {
+  currentView = view;
+  for (const v of VIEWS) $("cam-" + v).classList.toggle("on", v === view);
+  $("camLabel").textContent = `CAM ${VIEWS.indexOf(view) + 1}/3  ${VIEW_NAMES[view]}`;
+  $("flash").classList.remove("go");
+  void $("flash").offsetWidth;  // restarts the CSS animation
+  $("flash").classList.add("go");
+  // Light up the matching pipeline stage, just for show: top = perceive, side = detect, claw = act.
+  for (let i = 0; i < 3; i++) $("st-" + i).classList.toggle("active", i === VIEWS.indexOf(view));
+}
+
+function updateCamera(now) {
+  const picked = $("camSelect").value;
+  let wanted;
+  if (picked !== "auto") {
+    wanted = picked;
+  } else {
+    if (now - lastSwitch > CYCLE_MS) {
+      cycleIndex = (cycleIndex + 1) % VIEWS.length;
+      lastSwitch = now;
+    }
+    wanted = VIEWS[cycleIndex];
+  }
+  if (wanted !== currentView) showView(wanted);
+}
+
+function updateClock() {
+  const time = new Date();
+  $("hud-tr").textContent = time.toTimeString().slice(0, 8);
+}
+
+// ---------------------------------------------------------------- drifting binary digits
+// Bits canvas sits 60px left of and 18px above the hero, so the hero is at (60, 18) inside it.
+const bits = $("bits"), bctx = bits.getContext("2d");
+const HERO_IN_BITS = { x: 60, y: 18, w: 456, h: 342 };
+const bands = [];
+for (let i = 0; i < 12; i++) {
+  bands.push({
+    y: 20 + Math.random() * 344,
+    speed: 15 + Math.random() * 45,
+    offset: Math.random() * 600,
+    size: 12 + Math.random() * 10,
+    alpha: 0.12 + Math.random() * 0.4,
+    digits: Array.from({ length: 34 }, () => (Math.random() < 0.5 ? "0" : "1")),
+  });
+}
+
+function drawBits(dt) {
+  const W = bits.width, H = bits.height;
+  bctx.clearRect(0, 0, W, H);
+  bctx.save();
+  // Keep the digits outside the video so the picture stays readable.
+  const r = HERO_IN_BITS;
+  bctx.beginPath();
+  bctx.rect(0, 0, W, H);
+  bctx.rect(r.x, r.y, r.w, r.h);
+  bctx.clip("evenodd");
+  bctx.shadowColor = "rgba(210,230,255,.9)";
+  bctx.shadowBlur = 8;
+  for (const band of bands) {
+    band.offset = (band.offset + band.speed * dt) % 600;
+    if (Math.random() < 0.02) {
+      const i = Math.floor(Math.random() * band.digits.length);
+      band.digits[i] = band.digits[i] === "0" ? "1" : "0";
+    }
+    bctx.font = `bold ${band.size}px Arial`;
+    bctx.fillStyle = `rgba(220,235,255,${band.alpha})`;
+    const spacing = band.size * 1.6;
+    band.digits.forEach((digit, i) => {
+      const x = ((i * spacing + band.offset) % (W + 40)) - 20;
+      bctx.fillText(digit, x, band.y);
+    });
+  }
+  bctx.restore();
+}
+
+// ---------------------------------------------------------------- main animation loop
+let previous = performance.now();
+function frame(now) {
+  const dt = Math.min((now - previous) / 1000, 0.1);
+  previous = now;
+  updateCamera(now);
+  updateClock();
+  drawBits(dt);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
 </body>
 </html>

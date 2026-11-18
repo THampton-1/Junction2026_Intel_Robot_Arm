@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adapt · Anomaly Scores</title>
+<link rel="stylesheet" href="assets/retro.css">
+</head>
+<body>
+<main id="content">
+  <h1>Anomaly Scores</h1>
+  <p class="sub">how Adapt spots a defect</p>
+  <div class="construction"><span>UNDER CONSTRUCTION</span></div>
+
+  <section class="slot">
+    <h2>How PatchCore works</h2>
+    <p class="hint">One paragraph: learns only from good blocks; score = distance of the strangest patch from the memory bank.</p>
+  </section>
+  <section class="slot">
+    <h2>Three rounds of tests</h2>
+    <p class="hint">Test 1 (claw, big vs small block) → Test 2.1 (all three cameras) → Test 3 (real dots, side camera, tight crop).</p>
+  </section>
+  <section class="slot">
+    <h2>Choosing the camera</h2>
+    <p class="hint">Test 2.1 table: claw 0.943, side 1.00 (+0.156 gap), top 1.00 (+0.103). Caveat: chosen on the stand-in defect.</p>
+  </section>
+  <section class="slot">
+    <h2>The final model</h2>
+    <p class="hint">Score chart of the 24 test photos with the 0.37 threshold; the gallery of crops; 15/15 visible defects, 8/8 good.</p>
+  </section>
+  <section class="slot">
+    <h2>Limits</h2>
+    <p class="hint">Threshold chosen on the test photos; small data; speed not measured on the robot laptop.</p>
+  </section>
+</main>
+<script src="assets/retro.js"></script>
+</body>
+</html>
