@@ -125,8 +125,39 @@
 
   #footer { position: absolute; right: 40px; top: 650px; font-size: 11px; }
 </style>
+<style>
+  /* ---- Opening wipe: intel.com in 2000 gives way to Adapt, once per visit ---- */
+  #intro {
+    position: fixed; inset: 0; z-index: 10; cursor: pointer;
+    background: repeating-linear-gradient(to bottom, #0c33e0 0 2px, #0a2cc6 2px 4px);
+  }
+  /* Same 1000x700 box and scale as #stage, so the old and new layouts line up under the divider */
+  #intro-stage { position: absolute; left: 50%; top: 50%; width: 1000px; height: 700px; overflow: hidden; transform-origin: center; }
+  #intro-stage img { display: block; width: 1000px; height: auto; margin-top: -10px; }   /* lines the two headlines up */
+  #divider {
+    position: fixed; top: 0; bottom: 0; left: 0; width: 3px; margin-left: -1.5px; z-index: 11; display: none;
+    background: #ffe08a; box-shadow: 0 0 14px 2px #ffe08a;
+  }
+  #divider span {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); white-space: nowrap;
+    padding: 5px 12px; border: 2px solid #ffe08a; border-radius: 16px; background: #0622a0;
+    font-size: 13px; font-weight: bold; letter-spacing: 1px;
+  }
+  .no-intro #intro, .no-intro #divider { display: none; }
+</style>
+<script>
+  // Skip the wipe if it already played in this tab, or if the visitor prefers less motion.
+  try {
+    if (sessionStorage.getItem("adaptIntroSeen") || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("no-intro");
+    }
+  } catch (e) {}
+</script>
 </head>
 <body>
+<!-- Opening wipe (see the script at the end) -->
+<div id="intro" aria-hidden="true"><div id="intro-stage"><img src="assets/Intel_2000s_Screenshot.png" alt=""></div></div>
+<div id="divider" aria-hidden="true"><span>2026 &nbsp;|&nbsp; 2000</span></div>
 <div id="stage">
   <div id="leftcol"></div>
 
@@ -317,6 +348,69 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+</script>
+<script>
+// ---------------------------------------------------------------- opening wipe
+// Hold intel.com (2000) on screen for 2 s, then sweep a divider left to right to reveal Adapt.
+// Plays once per visit; a click or key press skips it.
+(function () {
+  const intro = document.getElementById("intro");
+  const divider = document.getElementById("divider");
+  const img = intro.querySelector("img");
+  if (document.documentElement.classList.contains("no-intro")) return;
+
+  const HOLD_MS = 2000;
+  const WIPE_MS = 1400;
+  let finished = false;
+
+  function fitIntro() {
+    const scale = Math.min(innerWidth / 1000, innerHeight / 700);
+    document.getElementById("intro-stage").style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }
+  addEventListener("resize", fitIntro);
+  fitIntro();
+
+  function finish() {
+    if (finished) return;
+    finished = true;
+    intro.remove();
+    divider.remove();
+    try { sessionStorage.setItem("adaptIntroSeen", "1"); } catch (e) {}
+  }
+
+  // Smooth start and stop: slow, fast, slow.
+  function easeInOut(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function wipe() {
+    if (finished) return;
+    divider.style.display = "block";
+    const start = performance.now();
+    function step(now) {
+      if (finished) return;
+      const t = Math.min((now - start) / WIPE_MS, 1);
+      const x = easeInOut(t) * innerWidth;
+      intro.style.clipPath = `inset(0 0 0 ${x}px)`;
+      divider.style.left = `${x}px`;
+      if (t < 1) requestAnimationFrame(step);
+      else finish();
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Start the 2 s hold only once the screenshot is showing; give up if it never loads.
+  function begin() { setTimeout(wipe, HOLD_MS); }
+  if (img.complete && img.naturalWidth > 0) begin();
+  else {
+    img.addEventListener("load", begin);
+    img.addEventListener("error", finish);
+    setTimeout(() => { if (!img.complete) finish(); }, 4000);
+  }
+
+  intro.addEventListener("click", finish);
+  addEventListener("keydown", finish, { once: true });
+})();
 </script>
 </body>
 </html>
