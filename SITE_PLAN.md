@@ -1,0 +1,70 @@
+# Portfolio site plan
+
+The plan for the GitHub Pages site in `docs/`, agreed 18 Nov 2026. The site keeps the team's retro
+2000s "Adapt" look. The model is the winners' site (shashankdurgad.github.io/dlsj): short text, big
+visuals, every claim a number with its sample size, before → after deltas.
+
+## Rule for every page
+
+Every claim carries a number and a source file in this repo. The novelty design means the points
+have to be sharp and evidence based, so the site doesn't read as a joke. Never use the placeholder
+numbers listed in `ARCHITECTURE.md` W13: the 93.3 % accuracy table (made by
+`seed_canonical_trials_if_empty()`, not by physical trials), the 16.5 W power figure (a fallback
+constant) or the heatmap and mock runs made by the same script.
+
+## Pages, in reading order
+
+| # | Page | File | Content |
+|---|------|------|---------|
+| 1 | Hero | `index.html` | Looping top, side and claw videos of one rotation; panel of checked facts. Done. |
+| 2 | Overview | `happened.html` | Story, the challenge, architecture, proudest ideas. |
+| 3 | Setup | `build.html` | Data and environment: hardware, three cameras, software, photo trigger and crop. |
+| 4 | ACT vs VLA, movements | `arm.html` | Why ACT, the three policies, movement videos. **Filled last**, after talking to the team. |
+| 5 | Anomalib | `detection.html` | PatchCore, three rounds of tests, camera choice, final model, limits. |
+| 6 | Reflection and integration | `reflection.html` | What fell short and the integration order we'd follow. |
+| — | Sources for judges | `evidence.html` | What we can show, numbers we don't trust, what's missing. |
+| — | Team | `team.html` | One entry each. |
+
+## Video inventory
+
+Exported from Physical AI Studio by `scripts/export_all_studio_datasets.py` into `datasets/`.
+Each episode has `claw_cam`, `side_view` and `top_view` at 30 fps.
+
+| Dataset | Episodes | Shows | Use on site |
+|---------|----------|-------|-------------|
+| `90_degree_turn` | 10 | Pick, turn 90°, put back. Side view is clearest. | Hero (done); movements. |
+| `theo_frames_to_crop_v2` | 49 | Block with a dot, arm still. | Anomalib test data. |
+| `block_to_green_v4` | 6 | Pick up, drop in green. | Movements. |
+| `block_to_pink_v5` | 12 | Pick up, drop in pink. | Movements. |
+
+The others are older or were recorded only for training. The dataset READMEs give stale episode
+counts (pink v5 says 6, crop v2 says 6); the folder counts above are correct.
+
+**All four are teleoperated demonstrations, not autonomous ACT runs.** This was checked from the
+joint data (19 Nov). In every episode of every dataset, each `action_*` value sits on a lattice of
+evenly spaced points. The spacing is different from the follower arm's `state_*` lattice: for
+`shoulder_pan`, the action step is 0.0748 and the state step is 0.0798. So the action column is
+the leader arm's servo reading, quantised in ticks and passed through the leader's calibration. A
+policy's output would be continuous floats, and if it were ever quantised, it would land on the
+follower's lattice. No exported dataset contains an autonomous run. On the site, caption these as "the demonstrations we taught ACT with". Footage of an
+autonomous run would have to come from a teammate's phone.
+
+## Evidence for choosing ACT (page 4)
+
+| Reason | Number | Source | Status |
+|--------|--------|--------|--------|
+| Fast training | under 10 min, 2,765 steps on a Modal A10G | `MASTER_PROJECT_CONTEXT.md` §6 | Written by Gemini. Needs a primary source: the Studio training job page or the model folder on the robot laptop. |
+| Small data budget | demos per policy: 10 (turn), 6 (green), 12 (pink) | `datasets/` folder counts | Measured. Need which dataset trained each policy (model IDs in `config.py`). |
+| Runs on the laptop | one forward pass per 100-step chunk, i.e. one every 3.3 s at 30 Hz | `ARCHITECTURE.md` W12, `ov_models.py` | Chunk size from the code. ACT latency was **never measured**: `reports/intel_hardware_benchmark.csv` is PatchCore. |
+| No language needed | Anomalib picks the policy, so a VLA's language input does nothing | `ARCHITECTURE.md` | Design argument. |
+| ACT vs SmolVLA | — | — | Not measured; present as a design choice. Ask the team. |
+
+## Open questions
+
+- **Training loss.** For ACT, this is the curve of its objective over training steps: L1 error
+  between the predicted and demonstrated action chunks, plus a β-weighted KL term from its CVAE
+  encoder. A curve that falls and flattens shows the policy fit the demos. It lives with the
+  trained model in Studio, under `~/.local/share/physicalai/models/<model id>/` on the robot
+  laptop. Decide whether it's worth fetching.
+- **SmolVLA.** The rest of the team knows more. Talk to them before writing page 4.
+- **Autonomous run footage.** Does anyone have phone video of ACT running on its own?
