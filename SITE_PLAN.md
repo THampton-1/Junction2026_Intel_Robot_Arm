@@ -4,6 +4,10 @@ The plan for the GitHub Pages site in `docs/`, agreed 18 Nov 2026. The site keep
 2000s "Adapt" look. The model is the winners' site (shashankdurgad.github.io/dlsj): short text, big
 visuals, every claim a number with its sample size, before → after deltas.
 
+`presentation.html` (repo root) is a good source of **format** to borrow: a fixed 16:10 stage,
+CRT scanlines, numbered tab navigation, stat boxes, HUD terminal blocks. Its **content** was never
+reviewed by a person; don't reuse any of its claims without a source.
+
 ## Rule for every page
 
 Every claim carries a number and a source file in this repo. The novelty design means the points
