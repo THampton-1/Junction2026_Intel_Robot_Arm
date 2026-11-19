@@ -63,9 +63,14 @@ autonomous run would have to come from a teammate's phone.
 | No language needed | Anomalib picks the policy, so a VLA's language input does nothing | `ARCHITECTURE.md` | Design argument. |
 | ACT vs SmolVLA | — | — | Not measured; present as a design choice. Ask the team. |
 
+**Decided 19 Nov:** page 4 uses the teleop demonstrations as its visuals and is framed as
+"trained, deployed, and how we'd measure it next time". The borrowed robot laptop was returned after the event,
+so Studio's model folders (training loss, metrics) are out of reach. Theo has asked the team for
+anything they saved; treat that as a long shot.
+
 ## Open questions
 
-- **Training loss.** For ACT, this is the curve of its objective over training steps: L1 error
+- **Training loss.** Closed: the laptop holding it is gone. For ACT, this is the curve of its objective over training steps: L1 error
   between the predicted and demonstrated action chunks, plus a β-weighted KL term from its CVAE
   encoder. A curve that falls and flattens shows the policy fit the demos. It lives with the
   trained model in Studio, under `~/.local/share/physicalai/models/<model id>/` on the robot
