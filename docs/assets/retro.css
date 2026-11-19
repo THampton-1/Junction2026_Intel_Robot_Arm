@@ -159,3 +159,29 @@ code { overflow-wrap: anywhere; }   /* long file paths wrap instead of widening 
 .chart { display: block; width: 100%; height: auto; margin: 10px 0 4px; border: 2px inset rgba(255,255,255,.5); }
 .panel ul { margin: 0 0 8px; padding-left: 20px; }
 .panel li { margin-bottom: 4px; }
+
+/* Journey tiles: question first, test name last */
+.step .q { font-size: 14px; font-weight: bold; margin: 0 0 6px; }
+.step .tag { margin-top: 6px; }
+
+/* Camera cards */
+.cams { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0; }
+.cam { margin: 0; flex: 1 1 170px; background: rgba(0, 10, 90, .45); border: 2px outset rgba(255,255,255,.5); padding: 6px; }
+.cam img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+.cam figcaption { font-size: 13px; margin-top: 6px; }
+.cam .verdict { display: block; font-size: 24px; font-weight: bold; color: var(--yellow); }
+.cam .verdict.bad { color: #ffb3b3; }
+.cam .n { display: block; font-size: 11px; opacity: .8; }
+.cam.chosen { border-color: var(--yellow); box-shadow: 0 0 0 2px var(--yellow); }
+
+/* Expandable explanations */
+details { border: 1px solid rgba(255,255,255,.35); background: rgba(0, 10, 90, .35); margin: 0 0 6px; padding: 6px 10px; }
+summary { cursor: pointer; font-size: 13px; }
+summary b { color: var(--yellow); }
+details[open] summary { margin-bottom: 6px; }
+details p, details ul { font-size: 13px; }
+
+/* Default-vs-ours table */
+.panel table.compare { width: auto; margin-top: 6px; }
+.panel table.compare td:not(:first-child), .panel table.compare th:not(:first-child) { text-align: center; }
+.heat figure { max-width: 340px; }   /* a lone tile stays tile-sized */

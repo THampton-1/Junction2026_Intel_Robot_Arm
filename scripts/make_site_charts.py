@@ -19,9 +19,9 @@ from pathlib import Path
 import pandas as pd
 from plotnine import (
     aes, annotate, element_blank, element_line, element_rect, element_text, facet_wrap,
-    geom_hline, geom_line, geom_point, geom_rect, geom_segment, geom_text, ggplot,
-    labs, position_jitter, scale_color_manual, scale_shape_manual, scale_x_discrete,
-    scale_y_continuous, theme, theme_minimal,
+    geom_hline, geom_line, geom_vline, geom_point, geom_rect, geom_segment, geom_text, ggplot,
+    labs, position_jitter, scale_color_manual, scale_shape_manual, scale_x_continuous, scale_x_discrete,
+    scale_y_continuous, scale_y_discrete, theme, theme_minimal,
 )
 
 REPO = Path(__file__).resolve().parent.parent
@@ -206,44 +206,79 @@ def chart_ep05():
 
 
 # ---------------------------------------------------------------------------------------------
-# 4. Threshold set on Test 3, checked on Test 4
+# 4. Anomalib's default line (0.5) against ours (0.37), on the tuning photos and on new photos
 # ---------------------------------------------------------------------------------------------
+DEFAULT_LINE = 0.5
+
+
 def chart_threshold():
+    sets = ["Photos we tuned on (Test 3)", "New photos, never seen (Test 4)"]
     test3 = read_log_scores(REPO / "anomalib/test_3/logs/side_view_no_ep05.log")
-    test3["test"] = "Test 3: threshold set here (24 photos)"
+    test3 = test3[test3["photo"] != "theo_v2_ep33"].copy()   # dot faces away from the camera
+    test3["set"] = sets[0]
     test4 = pd.read_csv(REPO / "anomalib/test_4/scores.csv")
     test4["photo"] = test4["photo"].str.replace(".png", "", regex=False)
     test4 = test4[["photo", "label", "score"]].copy()
-    test4["test"] = "Test 4: checked on unseen photos (14)"
+    test4["set"] = sets[1]
     scores = pd.concat([test3, test4])
-    order = ["Test 3: threshold set here (24 photos)", "Test 4: checked on unseen photos (14)"]
-    scores["test"] = pd.Categorical(scores["test"], categories=order)
+    scores["set"] = pd.Categorical(scores["set"], categories=sets)
 
-    notes = pd.DataFrame([
-        {"test": order[0], "label": "defect", "score": 0.0, "text": "ep33: dot faces away  "},
-        {"test": order[1], "label": "good", "score": 0.524, "text": "  ep04: predicted"},
+    # Print the results under each line so the page's table can be checked against them
+    for name in sets:
+        part = scores[scores["set"] == name]
+        for line in (DEFAULT_LINE, THRESHOLD):
+            caught = ((part["label"] == "defect") & (part["score"] > line)).sum()
+            passed = ((part["label"] == "good") & (part["score"] <= line)).sum()
+            print(f"  {name}, line {line}: dots caught {caught}/{(part['label'] == 'defect').sum()}, "
+                  f"good passed {passed}/{(part['label'] == 'good').sum()}")
+
+    # Rows: good at y = 1, defect at y = 2. Each photo gets a small fixed vertical offset (cycling
+    # through 5 positions) so dots with similar scores don't sit on top of each other, and so the
+    # rings below can be drawn exactly on the dots they mark.
+    scores = scores.sort_values(["set", "label", "score"]).reset_index(drop=True)
+    offsets = [-0.12, 0.06, -0.03, 0.12, -0.08]
+    scores["y"] = scores["label"].map({"good": 1, "defect": 2}).astype(float)
+    scores["y"] = scores["y"] + [offsets[i % 5] for i in range(len(scores))]
+
+    rings = scores[scores["photo"].isin(["theo_v2_ep34", "theo_v2_ep04", "theo_ep04"])].copy()
+    notes = rings.copy()
+    notes["text"] = notes["photo"].map({
+        "theo_v2_ep34": "on the default line: missed by 0.5",
+        "theo_v2_ep04": "red block: missed by 0.5, caught by 0.37",
+        "theo_ep04": "faint mark, flagged in advance",
+    })
+    notes["ha"] = notes["photo"].map({"theo_v2_ep34": "right", "theo_v2_ep04": "right", "theo_ep04": "left"})
+    notes["x"] = notes["score"] + notes["ha"].map({"right": -0.03, "left": 0.03})
+
+    line_labels = pd.DataFrame([
+        {"set": sets[0], "x": THRESHOLD - 0.01, "text": "ours: 0.37", "ha": "right"},
+        {"set": sets[0], "x": DEFAULT_LINE + 0.01, "text": "default: 0.5", "ha": "left"},
     ])
-    notes["test"] = pd.Categorical(notes["test"], categories=order)
-    notes["hjust"] = ["right", "left"]   # ep33's label sits to its left so it stays inside the panel
+    line_labels["set"] = pd.Categorical(line_labels["set"], categories=sets)
 
     plot = (
-        ggplot(scores, aes("label", "score", color="label", shape="label"))
-        + geom_hline(yintercept=THRESHOLD, color=LINE, linetype="dashed", size=0.8)
-        + geom_point(size=3, alpha=0.9, position=position_jitter(width=0.15, height=0, random_state=2))
-        + geom_text(aes(x="label", y="score", label="text", ha="hjust"), data=notes, color=INK, size=8.5,
+        ggplot(scores, aes("score", "y", color="label", shape="label"))
+        + geom_vline(xintercept=DEFAULT_LINE, color=INK, linetype="dotted", size=0.8, alpha=0.8)
+        + geom_vline(xintercept=THRESHOLD, color=LINE, size=1.1)
+        + geom_point(size=3.2, alpha=0.9)
+        + geom_point(data=rings, size=7, shape="o", fill="none", color=INK, stroke=1.2)
+        + geom_text(aes(x="x", y="y", label="text", ha="ha"), data=notes, color=INK, size=8.5,
                     inherit_aes=False)
-        + annotate("text", x=0.55, y=THRESHOLD + 0.03, label="0.37", color=LINE, size=9, ha="left")
-        + facet_wrap("test")
+        + geom_text(aes(x="x", label="text", ha="ha"), y=1.5, data=line_labels, color=LINE, size=9,
+                    inherit_aes=False, fontweight="bold")
+        + facet_wrap("set", ncol=1)
         + scale_color_manual(values=COLOURS)
         + scale_shape_manual(values=SHAPES)
-        + scale_x_discrete(limits=["good", "defect"])
-        + labs(x="", y="anomaly score",
-               title="Set on one set of photos, held on another",
-               subtitle="Above the dashed line = defect. The further a photo sits from the line, the safer its verdict",
-               caption="Source: anomalib/test_3/logs · anomalib/test_4/scores.csv")
+        + scale_y_continuous(breaks=[1, 2], labels=["good", "defect"], limits=(0.7, 2.3))
+        + scale_x_continuous(limits=(0, 1), breaks=[0, 0.25, 0.5, 0.75, 1])
+        + labs(x="score: how unusual the block looks  →  right of the line = defect", y="",
+               title="Moving the line from 0.5 to 0.37 caught every dot",
+               subtitle="Each dot is one photo. Ringed: the photos where the choice of line matters",
+               caption="Source: anomalib/test_3/logs · anomalib/test_4/scores.csv · "
+                       "one Test 3 photo left out (its dot faces away from the camera)")
         + site_theme()
     )
-    save(plot, "threshold.png", 8, 4.6)
+    save(plot, "threshold.png", 8, 5.2)
 
 
 if __name__ == "__main__":
