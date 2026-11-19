@@ -4,6 +4,7 @@ const NAV = [
   { file: "happened.html",   title: "Overview" },
   { file: "detection.html",  title: "Anomaly Scores" },
   { file: "reflection.html", title: "On Reflection" },
+  { file: "adam.html",       title: "Adam" },
 ];
 
 function buildFrame() {
