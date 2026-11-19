@@ -204,3 +204,6 @@ details p, details ul { font-size: 13px; }
 /* Two panels side by side; they stack on phones */
 .split { display: flex; flex-wrap: wrap; gap: 16px; }
 .split .panel { flex: 1 1 260px; margin-bottom: 0; }
+
+/* A section whose text hasn't been written yet */
+.towrite { font-style: italic; opacity: .6; }

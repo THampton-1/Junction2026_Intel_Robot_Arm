@@ -3,6 +3,7 @@
 const NAV = [
   { file: "happened.html",   title: "Overview" },
   { file: "detection.html",  title: "Anomaly Scores" },
+  { file: "reflection.html", title: "On Reflection" },
 ];
 
 function buildFrame() {
