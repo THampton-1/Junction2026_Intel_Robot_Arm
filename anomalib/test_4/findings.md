@@ -1,5 +1,39 @@
 # Anomalib Test 4: Results
 
+## 0. Labels corrected (19 Nov 2026, after first scoring)
+
+**The official result uses Theo's labels: 9/9 defects caught, 5/5 good blocks passed, AUROC 1.000
+(45 pairs), gap +0.243.** Scores: `scores_theo_labels.csv`; photos: `data_theo_labels/`.
+
+**What happened.** Theo wrote his labels for these photos in
+`theo_labels_2026-11-19_1254.txt`, saved at 12:54, before the plan was committed (13:01) and before
+any photo was scored (13:03). The plan didn't use that file: Claude built the labels from filenames
+and images instead, and Theo approved that table in chat. The two sets differ on three photos:
+
+| Photo | Theo's file (official) | Original plan |
+|---|---|---|
+| `theo_ep04` | defect | good |
+| `theo_ep00` | "Normal? maybe remove" → removed | good |
+| `theo_v2_ep00` | defect | held back |
+
+**Why switching is fair.** Both label sets were fixed before any score, and the model, the crop
+and the 0.37 threshold are unchanged. No score moved; only the labels did. `theo_v2_ep00` was
+scored for the first time after the mismatch was found (0.705), against Theo's pre-scoring label.
+
+**What it changes.** The "one false alarm" in the original result (ep04, 0.524) was a labelling
+error. Theo had called it a defect, and the model agreed. Sections 1–4 below are the original
+result under the plan's labels, kept unedited so the history is visible.
+
+| | Theo's labels (official) | Original plan's labels |
+|---|---|---|
+| Defects caught at 0.37 | **9/9** | 7/7 |
+| Good blocks passed at 0.37 | **5/5** | 6/7 |
+| Defects caught at Anomalib's default 0.5 | 8/9 (misses `theo_v2_ep04`, 0.464) | 6/7 |
+| Image AUROC | **1.000** | 0.980 |
+| Gap (lowest defect − highest good) | **+0.243** | −0.060 |
+
+---
+
 > **Plan:** `PLAN.md`, committed (c5e8344) before any photo was scored
 > **Model:** Test 3 final (`side_view_no_ep05`), unchanged. **Threshold:** 0.37, unchanged.
 > **Scored:** once, 19 November 2026, with `scripts/score_anomalib_folder.py`. Every score is in `scores.csv`.

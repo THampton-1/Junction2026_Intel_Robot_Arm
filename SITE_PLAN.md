@@ -97,13 +97,13 @@ anything they saved; treat that as a long shot.
 | Page | State |
 |---|---|
 | Hero (`index.html`) | Done |
-| Anomalib (`detection.html`) | **Draft 3.** Decisions in `SITE_DECISIONS.md`. Blocked on D0 (which Test 4 labels count). |
+| Anomalib (`detection.html`) | **Draft 3.** Decisions in `SITE_DECISIONS.md`. D0 resolved: Test 4 = 9/9, 5/5 on Theo's labels. |
 | Overview, Setup, Reflection, Sources, Team | Placeholders. Reflection has a "Limits of the defect model" slot filled from Anomalib. |
 | ACT vs VLA (`arm.html`) | Last, after talking to the team. |
 
 All site commits are local only; nothing is pushed and Pages isn't enabled.
 
-**Next session:** settle D0 first (5 minutes), then start a new page. Remaining by evidence
+**Next session:** start a new page. Remaining by evidence
 strength: Setup (`build.html`), Reflection, Overview.
 
 **Parking lot**

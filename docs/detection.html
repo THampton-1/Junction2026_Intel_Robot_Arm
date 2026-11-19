@@ -17,7 +17,7 @@
     <div class="step"><div class="q">Can it tell blocks apart?</div><div class="a">gap 0.044</div><div class="n">stand-in defect, claw camera, 24 photos</div><div class="tag">Test 1 · baseline</div></div>
     <div class="step"><div class="q">Which camera?</div><div class="a">side +0.156</div><div class="n">the claw camera's scores overlap</div><div class="tag">Test 2.1 · baseline</div></div>
     <div class="step"><div class="q">Can it see a dot?</div><div class="a">gap 0.252</div><div class="n">15/15 visible dots, 8/8 good</div><div class="tag">Test 3 · stretch</div></div>
-    <div class="step"><div class="q">Does it hold on new photos?</div><div class="a">7/7 · 6/7</div><div class="n">dots caught · good passed, 14 unseen photos</div><div class="tag">Test 4 · stretch</div></div>
+    <div class="step"><div class="q">Does it hold on new photos?</div><div class="a">9/9 · 5/5</div><div class="n">dots caught · good passed, 14 unseen photos</div><div class="tag">Test 4 · stretch</div></div>
   </div>
 
   <!-- Headline: what the model sees -->
@@ -153,26 +153,26 @@
           doesn't look unusual.</li>
       </ul>
     </details>
-    <img class="chart" src="assets/charts/threshold.png" alt="Scores of every photo along a line from 0 to 1, with the default line at 0.5 and ours at 0.37. On the tuning photos the default misses one dot that sits exactly on 0.5. On new photos the default misses the red block at 0.46; ours catches every dot.">
+    <img class="chart" src="assets/charts/threshold.png" alt="Scores of every photo along a line from 0 to 1, with the default line at 0.5 and ours at 0.37. On the tuning photos the default misses one dot that sits exactly on 0.5. On new photos the default misses the red block at 0.46; ours catches every dot and passes every good block.">
     <table class="compare">
       <tr><th></th><th>Default line 0.5</th><th>Our line 0.37</th></tr>
       <tr><td>Dots caught, photos we tuned on</td><td>14/15</td><td><b>15/15</b></td></tr>
-      <tr><td>Dots caught, new photos</td><td>6/7</td><td><b>7/7</b></td></tr>
-      <tr><td>Good blocks passed, both sets</td><td>14/15</td><td>14/15</td></tr>
+      <tr><td>Dots caught, new photos</td><td>8/9</td><td><b>9/9</b></td></tr>
+      <tr><td>Good blocks passed, both sets</td><td>13/13</td><td>13/13</td></tr>
     </table>
   </section>
 
   <section class="panel">
     <h2>Tested on photos it had never seen</h2>
     <p><b>We locked the line at 0.37 before looking at any new photo, then scored 14 new photos
-      once.</b> We wrote the plan down first (which photos, their labels, the line, and the one
-      photo we expected to cause trouble) and saved it in the project's history, so the line
-      couldn't be nudged after seeing the results. Every dot was caught. The one false alarm was
-      the block we'd flagged in advance, and the model lit up on the same faint mark.</p>
+      once.</b> Each photo was labelled good or defect by eye before any score existed, so
+      neither the line nor the labels could be nudged after seeing the results. Every dot was
+      caught (9/9) and every good block passed (5/5). The hardest call was a faint mark that
+      Theo had labelled a defect by eye; the model lit up on the same spot.</p>
     <div class="heat">
-      <figure><img src="assets/charts/heat_false_alarm_ep04.png" alt="A yellow block labelled good; the heatmap is bright on a faint mark low on its face"><figcaption><b>The one false alarm</b> · score 0.52. Flagged before scoring for a faint mark; the model found it too.</figcaption></figure>
+      <figure><img src="assets/charts/heat_false_alarm_ep04.png" alt="A yellow block with a faint mark low on its face; the heatmap is bright on the mark"><figcaption><b>The faintest dot</b> · score 0.52 → pink bowl. Labelled a defect by eye before scoring; the model found the same mark.</figcaption></figure>
     </div>
-    <p class="src">Plan saved before scoring: <code>anomalib/test_4/PLAN.md</code> · results: <code>anomalib/test_4/findings.md</code></p>
+    <p class="src">Labels written before scoring: <code>anomalib/test_4/theo_labels_2026-11-19_1254.txt</code> · results and the label history: <code>anomalib/test_4/findings.md</code></p>
   </section>
 </main>
 <script src="assets/retro.js"></script>

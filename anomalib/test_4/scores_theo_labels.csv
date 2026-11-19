@@ -1,0 +1,15 @@
+photo,label,score,verdict
+theo_ep01.png,good,0.1347,good
+theo_ep03.png,good,0.112,good
+theo_ep05.png,good,0.0063,good
+theo_ep06.png,good,0.2214,good
+theo_ep09.png,good,0.0563,good
+theo_ep02_defect.png,defect,0.546,defect
+theo_ep04.png,defect,0.5245,defect
+theo_ep07_defect.png,defect,0.5294,defect
+theo_ep08_defect.png,defect,0.5724,defect
+theo_v2_ep00.png,defect,0.705,defect
+theo_v2_ep01.png,defect,0.7157,defect
+theo_v2_ep02.png,defect,0.6492,defect
+theo_v2_ep03.png,defect,0.6422,defect
+theo_v2_ep04.png,defect,0.4641,defect

@@ -6,7 +6,7 @@ Every number comes from a file in this repo:
   1. trigger.png     - datasets/90_degree_turn/trajectories/episode_00_joints.csv
   2. cameras.png     - anomalib/test_2/Test 2.1/logs/*.log
   3. ep05.png        - anomalib/test_3/logs/side_view.log and side_view_no_ep05.log
-  4. threshold.png   - anomalib/test_3/logs/side_view_no_ep05.log and anomalib/test_4/scores.csv
+  4. threshold.png   - anomalib/test_3/logs/side_view_no_ep05.log and anomalib/test_4/scores_theo_labels.csv
 
 Run with the site-charts venv (plotnine needs pandas 3, which breaks anomalib):
     python scripts/make_site_charts.py
@@ -216,7 +216,8 @@ def chart_threshold():
     test3 = read_log_scores(REPO / "anomalib/test_3/logs/side_view_no_ep05.log")
     test3 = test3[test3["photo"] != "theo_v2_ep33"].copy()   # dot faces away from the camera
     test3["set"] = sets[0]
-    test4 = pd.read_csv(REPO / "anomalib/test_4/scores.csv")
+    # Theo's labels, written before scoring (see anomalib/test_4/findings.md section 0)
+    test4 = pd.read_csv(REPO / "anomalib/test_4/scores_theo_labels.csv")
     test4["photo"] = test4["photo"].str.replace(".png", "", regex=False)
     test4 = test4[["photo", "label", "score"]].copy()
     test4["set"] = sets[1]
@@ -240,14 +241,13 @@ def chart_threshold():
     scores["y"] = scores["label"].map({"good": 1, "defect": 2}).astype(float)
     scores["y"] = scores["y"] + [offsets[i % 5] for i in range(len(scores))]
 
-    rings = scores[scores["photo"].isin(["theo_v2_ep34", "theo_v2_ep04", "theo_ep04"])].copy()
+    rings = scores[scores["photo"].isin(["theo_v2_ep34", "theo_v2_ep04"])].copy()
     notes = rings.copy()
     notes["text"] = notes["photo"].map({
         "theo_v2_ep34": "on the default line: missed by 0.5",
         "theo_v2_ep04": "red block: missed by 0.5, caught by 0.37",
-        "theo_ep04": "faint mark, flagged in advance",
     })
-    notes["ha"] = notes["photo"].map({"theo_v2_ep34": "right", "theo_v2_ep04": "right", "theo_ep04": "left"})
+    notes["ha"] = "right"
     notes["x"] = notes["score"] + notes["ha"].map({"right": -0.03, "left": 0.03})
 
     line_labels = pd.DataFrame([
@@ -274,7 +274,7 @@ def chart_threshold():
         + labs(x="score: how unusual the block looks  →  right of the line = defect", y="",
                title="Moving the line from 0.5 to 0.37 caught every dot",
                subtitle="Each dot is one photo. Ringed: the photos where the choice of line matters",
-               caption="Source: anomalib/test_3/logs · anomalib/test_4/scores.csv · "
+               caption="Source: anomalib/test_3/logs · anomalib/test_4/scores_theo_labels.csv · "
                        "one Test 3 photo left out (its dot faces away from the camera)")
         + site_theme()
     )

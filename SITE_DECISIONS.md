@@ -4,9 +4,15 @@ How the Anomaly Scores page reached draft 3 (19 Nov 2026), plus the site-wide ca
 it. Newest first within each section. The page plan itself is in `SITE_PLAN.md`; the Anomalib
 evidence is in `anomalib/README.md` and each test's `findings.md`.
 
-## Open: needs Theo's decision before the page is final
+## D0. Which labels count for Test 4? Resolved 19 Nov: Theo's
 
-**D0. Which labels count for Test 4?** Theo's own labels for the 15 unseen photos are in
+**Decision:** Theo's pre-scoring labels are official, now 9/9 dots caught and 5/5 good blocks
+passed. Done: file moved to `anomalib/test_4/theo_labels_2026-11-19_1254.txt`; rescored into
+`scores_theo_labels.csv`; dated §0 added to `findings.md` with both results (§1–4 kept unedited);
+threshold chart, page and `anomalib/README.md` updated. The ep04 "false alarm" was Claude's
+labelling error: Theo had called it a defect, and the model agreed.
+
+*Background, as logged before the decision:* Theo's own labels for the 15 unseen photos were in
 `Untested data classification.txt` (repo root, untracked), saved at 12:54 on 19 Nov. That is
 before the Test 4 plan was committed (13:01, `c5e8344`) and before scoring (13:03). The committed
 plan used labels Claude built from filenames and images instead, which Theo then approved in

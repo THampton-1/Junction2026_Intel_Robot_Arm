@@ -1,0 +1,19 @@
+
+V2: Theo_frames_to_crop_v2 (not cropped though?)
+00 - defect
+01 - defect
+02 - defect
+03 - defect
+04 - defect
+
+V1: Theo_frames_to_crop
+00 - Normal? maybe remove 
+01 - Normal
+02 - defect
+03 - Normal
+04 - defect
+05 - Normal
+06 - Normal
+07 - defect
+08 - defect
+09 - Normal

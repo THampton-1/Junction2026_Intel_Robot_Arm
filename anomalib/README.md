@@ -10,7 +10,7 @@ test's `findings.md`.
 | Test 2.1 (14 Nov) | Which camera? Same task on all three cameras. | Side view: AUROC 1.0, gap +0.156. Top: +0.103. Claw: scores overlap (AUROC 0.943). **Side camera chosen.** | `test_2/Test 2.1/` |
 | **Stretch** | | | |
 | Test 3 (15 Nov) | The real defect, a dot, on the side camera with the trigger's tight crop. | 15/15 visible defects caught, 8/8 good blocks passed. Removing ep05 (a dotted block in the "good" training set) doubled the gap from 0.127 to 0.252. **Threshold 0.37** set by the midpoint rule written down in Test 2.1. | `test_3/` |
-| Test 4 (19 Nov) | Does 0.37 hold on photos the model has never seen? Plan committed before scoring. | 7/7 defects caught, 6/7 good blocks passed, AUROC 0.980. The one false alarm (`theo_ep04`) was predicted in the plan. | `test_4/` |
+| Test 4 (19 Nov) | Does 0.37 hold on photos the model has never seen? Labels and threshold fixed before scoring. | 9/9 defects caught, 5/5 good blocks passed, AUROC 1.000, gap +0.243 (Theo's pre-scoring labels; see `findings.md` §0 for the label correction). | `test_4/` |
 
 ## Why the order matters
 
