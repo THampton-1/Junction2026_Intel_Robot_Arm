@@ -136,3 +136,26 @@ h1 { font-size: 38px; font-weight: 300; margin: 0 0 4px; }
 .panel th { background: rgba(0, 10, 90, .5); }
 .panel tr.group td { background: rgba(255, 157, 28, .25); font-weight: bold; }
 code { overflow-wrap: anywhere; }   /* long file paths wrap instead of widening the page on phones */
+
+/* Journey strip: the four tests left to right */
+.journey { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; align-items: stretch; }
+.step {
+  flex: 1 1 150px; padding: 8px 10px; background: rgba(0, 10, 90, .45);
+  border: 2px outset rgba(255,255,255,.5); box-shadow: 3px 3px 0 var(--blue-dark); position: relative;
+}
+.step .tag { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--orange); font-weight: bold; }
+.step .q { font-size: 12px; margin: 2px 0 6px; }
+.step .a { font-size: 20px; font-weight: bold; color: var(--yellow); line-height: 1.15; }
+.step .n { font-size: 11px; opacity: .75; margin-top: 3px; }
+
+/* Heatmap tiles */
+.heat { display: flex; flex-wrap: wrap; gap: 14px; margin: 8px 0; }
+.heat figure { margin: 0; flex: 1 1 200px; }
+.heat img { width: 100%; height: auto; display: block; border: 2px inset rgba(255,255,255,.5); }
+.heat figcaption { font-size: 12px; margin-top: 4px; }
+.heat figcaption b { color: var(--yellow); }
+.scale { display: flex; align-items: center; gap: 8px; font-size: 11px; margin: 6px 0 10px; }
+.scale img { width: 200px; height: 12px; border: 1px solid rgba(255,255,255,.6); }
+.chart { display: block; width: 100%; height: auto; margin: 10px 0 4px; border: 2px inset rgba(255,255,255,.5); }
+.panel ul { margin: 0 0 8px; padding-left: 20px; }
+.panel li { margin-bottom: 4px; }

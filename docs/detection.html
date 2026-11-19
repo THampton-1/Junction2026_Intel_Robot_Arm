@@ -12,19 +12,29 @@
   <p class="sub">how Adapt spots a defect</p>
   <div class="construction"><span>DRAFT · MOCK LAYOUT</span></div>
 
-  <!-- The two headline numbers agreed for this page -->
-  <div class="stats">
-    <div class="stat">
-      <div class="big">7/7 · 6/7</div>
-      <div class="label">defects caught · good blocks passed, on 14 photos the model had never seen</div>
-      <div class="src">Test 4, threshold fixed in advance · <code>anomalib/test_4/</code></div>
-    </div>
-    <div class="stat">
-      <div class="big">0.127 → 0.252</div>
-      <div class="label">gap between the lowest-scoring defect and the highest-scoring good block, after removing one mislabelled training photo</div>
-      <div class="src">Test 3, 24 test photos · <code>anomalib/test_3/</code></div>
-    </div>
+  <!-- The journey: four tests, each answering one question -->
+  <div class="journey">
+    <div class="step"><div class="tag">Baseline · Test 1</div><div class="q">Can it tell blocks apart?</div><div class="a">gap 0.044</div><div class="n">stand-in defect, claw camera, 24 photos</div></div>
+    <div class="step"><div class="tag">Baseline · Test 2.1</div><div class="q">Which camera?</div><div class="a">side +0.156</div><div class="n">claw camera's scores overlap</div></div>
+    <div class="step"><div class="tag">Stretch · Test 3</div><div class="q">Can it see a dot?</div><div class="a">gap 0.252</div><div class="n">15/15 visible dots, 8/8 good</div></div>
+    <div class="step"><div class="tag">Stretch · Test 4</div><div class="q">Does it hold on new photos?</div><div class="a">7/7 · 6/7</div><div class="n">dots caught · good passed, 14 unseen photos</div></div>
   </div>
+
+  <!-- Headline: what the model sees -->
+  <section class="panel">
+    <h2>What the model sees</h2>
+    <p>Each tile is one block as the model sees it (left) and how unusual each part looks to the
+      model (right). Good blocks stay dark. The bright spot lands on the dot, including on a photo
+      the model had never seen.</p>
+    <div class="heat">
+      <figure><img src="assets/charts/heat_good_ep25.png" alt="A green block with no dot; its heatmap is dark all over"><figcaption><b>Good block</b> · score 0.00 → passes</figcaption></figure>
+      <figure><img src="assets/charts/heat_small_dot_ep45.png" alt="A light green block with a small dot; the heatmap is bright exactly on the dot"><figcaption><b>Small dot</b> · score 0.73 → defect</figcaption></figure>
+      <figure><img src="assets/charts/heat_unseen_dot_v2_ep03.png" alt="An orange block with a dot, from the unseen Test 4 photos; the heatmap is bright on the dot"><figcaption><b>Unseen photo, dot</b> · score 0.64 → defect</figcaption></figure>
+    </div>
+    <div class="scale"><span>usual</span><img src="assets/charts/heat_scale.png" alt="Colour key from dark (usual) to bright yellow (unusual)"><span>unusual</span></div>
+    <p class="src">One fixed colour scale for every tile, so bright means the same thing in each. Model: PatchCore, Test 3 final.
+      Made by <code>scripts/make_heatmaps.py</code>.</p>
+  </section>
 
   <section class="panel">
     <h2>Where the model sits in the cycle</h2>
@@ -90,51 +100,61 @@
       </svg>
       <figcaption>The agreed cycle (15 Nov): four photos, three turns. Source: <code>ARCHITECTURE.md</code> §2.</figcaption>
     </figure>
+    <img class="chart" src="assets/charts/trigger.png" alt="Line chart of the arm's distance from the reset pose over episode 00. The arm leaves the pose early, works over the block, returns, and the photo is taken once it has been inside the plus or minus 10 band for 5 frames.">
   </section>
 
   <section class="panel">
-    <h2>How PatchCore works</h2>
-    <p>PatchCore only ever sees good blocks. It cuts each training photo into small patches,
-      describes every patch with a pretrained network, and keeps a bank of those descriptions.
-      A new photo's score is how far its strangest patch is from anything in the bank. A dot
-      is a patch the bank has never seen.</p>
-    <p class="src">Model: PatchCore, <code>wide_resnet50_2</code>, 29 good training photos across 5 colours.</p>
+    <h2>Choosing the camera</h2>
+    <p>Before looking for dots, we tested all three cameras on the same blocks. The claw camera
+      mixed good and defect scores up; the side camera kept them apart, so the final model uses
+      the side camera.</p>
+    <img class="chart" src="assets/charts/cameras.png" alt="Dot plot of Test 2.1 scores for the claw, top and side cameras. On the claw camera one good photo scores above two defects; on the side camera every defect scores above every good photo.">
   </section>
 
   <section class="panel">
-    <h2>From video to a photo of one block</h2>
-    <p>The trigger watches the arm's joints, not the picture. When the arm has been parked at
-      the reset pose for 5 frames (0.17 s), it takes one photo. The photo is then cut to a fixed
-      54 × 49 px box, measured so it holds the whole block and none of the claw.</p>
-    <div class="chartslot"><b>Chart to come: the trigger firing.</b> Distance of the arm from the
-      reset pose across episode 00, with the ±10 "in pose" band and the photo at frame 1011.
-      Data: <code>datasets/90_degree_turn/trajectories/episode_00_joints.csv</code>.</div>
-    <figure class="fig">
-      <img src="assets/img/crop_box.png" alt="Ten side-camera photos, each with the final crop box in cyan around the whole block and an earlier, looser box in yellow">
-      <figcaption>All 10 turn episodes: final crop in cyan, the earlier, looser box in yellow. Source: <code>algorithm/README.md</code>.</figcaption>
-    </figure>
-  </section>
+    <h2>The threshold: where good ends and defect begins</h2>
+    <p><b>What it does.</b> The model gives every photo a score: near 0 means it looks like the
+      good blocks it learned from, and higher means stranger. The threshold is the single number
+      that turns a score into a decision. Above <b>0.37</b>, the block is a defect and goes to the
+      pink bowl. Everything the arm does after the photo depends on which side of that line the
+      score lands.</p>
+    <p><b>Why the middle is dangerous.</b> A score isn't fixed. Photograph the same block twice and
+      it moves a little: the light drifts, the camera's exposure changes, the block sits a millimetre
+      to one side. Far from the line, that wobble changes nothing. Close to the line, the same
+      wobble flips a good block to defect, or lets a dot through. So the goal isn't only to get
+      every test photo on the right side. It's to keep every photo <b>as far from the line as
+      possible</b>. Our measure is the distance from the line to the closest photo on each side.</p>
+    <p class="src">For the statistically minded: if the wobble is roughly normal with spread σ, a photo
+      a distance m from the line flips with probability Φ(−m/σ). That falls off faster than
+      exponentially, so doubling the margin more than halves the risk.</p>
 
-  <section class="panel">
-    <h2>Four tests, from baseline to held-out check</h2>
-    <table>
-      <tr><th>Test</th><th>Question</th><th>Answer</th></tr>
-      <tr class="group"><td colspan="3">Baseline</td></tr>
-      <tr><td>1</td><td>Can PatchCore tell blocks apart? (stand-in defect: big block, claw camera)</td><td>Yes, gap 0.044. 3.78 ms on the Xe3 iGPU against 75 ms on the CPU.</td></tr>
-      <tr><td>2.1</td><td>Which camera?</td><td>Side: gap +0.156. Top: +0.103. Claw: scores overlap.</td></tr>
-      <tr class="group"><td colspan="3">Stretch</td></tr>
-      <tr><td>3</td><td>Can it see a dot? (side camera, tight crop)</td><td>15/15 visible defects, 8/8 good. Threshold set at 0.37.</td></tr>
-      <tr><td>4</td><td>Does 0.37 hold on unseen photos?</td><td>7/7 defects, 6/7 good. The one miss was predicted.</td></tr>
-    </table>
-    <div class="chartslot"><b>Chart to come: choosing the camera.</b> Every Test 2.1 photo's score,
-      one column per camera, good and defect side by side. The claw column overlaps; the side
-      column doesn't. Data: <code>anomalib/test_2/Test 2.1/logs/</code>.</div>
-    <div class="chartslot"><b>Chart to come: one bad training photo.</b> Each Test 3 photo's score
-      with and without ep05 in training, joined by a line. Defects rise, good blocks fall.
-      Data: <code>anomalib/test_3/logs/</code>.</div>
-    <div class="chartslot"><b>Chart to come: set, then checked.</b> Test 3 and Test 4 scores on one
-      axis with the 0.37 line. Left panel: where the threshold was set. Right panel: where it was
-      tested. ep33 and ep04 labelled. Data: <code>test_3/logs/</code>, <code>test_4/scores.csv</code>.</div>
+    <p><b>How we pushed scores away from the line.</b></p>
+    <ul>
+      <li><b>The camera:</b> the side camera, chosen above, because its scores didn't overlap.</li>
+      <li><b>The crop:</b> each photo is cut to the block alone (54 × 49 px), so the claw and the
+        background can't add noise.</li>
+      <li><b>Clean training data:</b> one "good" training photo, ep05, had a dot on it. It was
+        teaching the model that dots are normal. Removing it doubled the gap between the
+        closest good block and the closest defect, from 0.127 to 0.252.</li>
+      <li><b>Where the line goes:</b> halfway between the highest-scoring good block (0.248) and
+        the lowest-scoring defect (0.500), so each side gets the same margin, 0.126. Anomalib's
+        default of 0.5 sat exactly on a defect (ep34 scored 0.500), leaving it no margin at all.</li>
+    </ul>
+    <img class="chart" src="assets/charts/ep05.png" alt="Two panels of Test 3 scores, with and without ep05 in training. The empty band between the highest good score and the lowest defect score grows from 0.127 to 0.252.">
+
+    <p><b>Did we just fit the line to our own data?</b> Partly, yes: 0.37 was worked out from
+      Test 3's photos, so Test 3 can't prove it works. That's what Test 4 is for. We wrote down
+      the plan (photos, labels, the 0.37 threshold, and which photo we expected to cause trouble)
+      and committed it before scoring anything. Then we scored 14 photos the model had never seen,
+      once. Every dot was caught (7/7), and 6 of 7 good blocks passed. The closest defect sat 0.094
+      above the line; the closest passing good block, 0.149 below it.</p>
+    <img class="chart" src="assets/charts/threshold.png" alt="Two panels of scores with the 0.37 line. Left, Test 3: every visible defect above the line, every good block below. Right, Test 4: every defect above the line and one good block, ep04, just above it.">
+    <div class="heat">
+      <figure><img src="assets/charts/heat_false_alarm_ep04.png" alt="A yellow block labelled good; the heatmap is bright on a faint mark low on its face"><figcaption><b>The one miss, ep04</b> · labelled good, score 0.52. We flagged its faint mark before scoring; the model lit up on the same spot.</figcaption></figure>
+      <figure><img src="assets/charts/heat_highest_good_ep30.png" alt="An orange block with no dot; the heatmap is mildly warm along its base"><figcaption><b>Closest good block in Test 3, ep30</b> · score 0.25. The warmth is along the base, not on the face.</figcaption></figure>
+    </div>
+    <p class="src">Sources: <code>anomalib/test_3/findings.md</code>, <code>anomalib/test_4/PLAN.md</code>
+      (committed before scoring), <code>anomalib/test_4/findings.md</code>.</p>
   </section>
 
   <section class="panel">

@@ -24,7 +24,7 @@ constant) or the heatmap and mock runs made by the same script.
 | 2 | Overview | `happened.html` | Story, the challenge, architecture, proudest ideas. |
 | 3 | Setup | `build.html` | Data and environment: hardware, three cameras, software, photo trigger and crop. |
 | 4 | ACT vs VLA, movements | `arm.html` | Why ACT, the three policies, movement videos. **Filled last**, after talking to the team. |
-| 5 | Anomalib | `detection.html` | PatchCore, three rounds of tests, camera choice, final model, limits. |
+| 5 | Anomalib | `detection.html` | Journey strip (4 tests), heatmaps, cycle diagram, camera choice, thresholds, limits. Later: a flip-through of video → photo → crop, three side by side to show how it standardises. |
 | 6 | Reflection and integration | `reflection.html` | What fell short and the integration order we'd follow. |
 | — | Sources for judges | `evidence.html` | What we can show, numbers we don't trust, what's missing. |
 | — | Team | `team.html` | One entry each. |
