@@ -37,13 +37,14 @@
   </section>
 
   <section class="panel">
-    <h2>Where the model sits in the cycle</h2>
-    <p>Every face of the block is photographed and scored before the arm decides where it goes.
-      A defect on the first face doesn't stop the cycle: all four faces are always checked, so
-      the whole inspection is shown.</p>
+    <h2>The Anomalib cycle</h2>
+    <p>Anomalib inspects every face of the block before the arm decides where it goes: the
+      trigger picks the moment, the crop keeps only the block, and PatchCore scores it. Even when
+      the first face shows a defect, the cycle carries on until all four faces are scored, so the
+      whole inspection is shown. The faded steps are the arm's part, covered on the Robot Arm page.</p>
     <figure class="fig scroll">
       <svg viewBox="0 0 900 395" role="img" aria-labelledby="cycle-title" font-family="Arial, Helvetica, sans-serif">
-        <title id="cycle-title">Inspection cycle: ACT turns the block, the side camera's video goes to the trigger, the trigger's photo is cropped to the block, PatchCore scores it; after four faces the block goes to pink if any face is a defect, otherwise green.</title>
+        <title id="cycle-title">The Anomalib inspection cycle: ACT turns the block, the side camera's video goes to the trigger, the trigger's photo is cropped to the block, PatchCore scores it; after four faces the block goes to pink if any face is a defect, otherwise green.</title>
         <defs>
           <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M0 0 L10 5 L0 10 z" fill="#ffffff"/>
@@ -60,27 +61,27 @@
         </g>
         <!-- Solid border: tested on recorded data. Dashed: trained or coded, never run end to end. -->
         <g stroke="#ffffff" stroke-width="2" fill="rgba(0,10,90,0.55)">
-          <rect x="10" y="50" width="140" height="60" stroke-dasharray="6 4"/>
-          <rect x="185" y="50" width="140" height="60"/>
-          <rect x="360" y="50" width="140" height="60"/>
-          <rect x="535" y="50" width="140" height="60"/>
-          <rect x="710" y="50" width="140" height="60"/>
+          <rect x="10" y="50" width="140" height="60" stroke-dasharray="6 4" opacity="0.45"/>
+          <rect x="185" y="50" width="140" height="60" stroke="#ffe08a" stroke-width="3"/>
+          <rect x="360" y="50" width="140" height="60" stroke="#ffe08a" stroke-width="3"/>
+          <rect x="535" y="50" width="140" height="60" stroke="#ffe08a" stroke-width="3"/>
+          <rect x="710" y="50" width="140" height="60" stroke="#ffe08a" stroke-width="3"/>
           <path d="M780 150 L850 185 L780 220 L710 185 z" stroke-dasharray="6 4"/>
           <path d="M780 255 L850 290 L780 325 L710 290 z" stroke-dasharray="6 4"/>
-          <rect x="500" y="270" width="150" height="40" stroke-dasharray="6 4" fill="rgba(255,120,200,0.35)"/>
-          <rect x="710" y="345" width="140" height="40" stroke-dasharray="6 4" fill="rgba(60,200,120,0.35)"/>
+          <rect x="500" y="270" width="150" height="40" stroke-dasharray="6 4" fill="rgba(255,120,200,0.35)" opacity="0.45"/>
+          <rect x="710" y="345" width="140" height="40" stroke-dasharray="6 4" fill="rgba(60,200,120,0.35)" opacity="0.45"/>
         </g>
         <g fill="#ffffff" font-size="13" text-anchor="middle">
           <text x="255" y="15" font-size="12">start: block on the mark, arm parked at X</text>
-          <text x="80" y="76" font-weight="bold">ACT turns block</text><text x="80" y="94" font-size="11">90°, back to X</text>
+          <g opacity="0.5"><text x="80" y="76" font-weight="bold">ACT turns block</text><text x="80" y="94" font-size="11">90°, back to X</text></g>
           <text x="255" y="76" font-weight="bold">Side camera</text><text x="255" y="94" font-size="11">30 fps video</text>
           <text x="430" y="76" font-weight="bold">Trigger</text><text x="430" y="94" font-size="11">arm at X → 1 photo</text>
           <text x="605" y="76" font-weight="bold">Crop</text><text x="605" y="94" font-size="11">54 × 49 px, block only</text>
           <text x="780" y="76" font-weight="bold">PatchCore</text><text x="780" y="94" font-size="11">score; &gt; 0.37 = defect</text>
           <text x="780" y="182" font-size="12">4 faces</text><text x="780" y="197" font-size="12">scored?</text>
           <text x="780" y="287" font-size="12">any face</text><text x="780" y="302" font-size="12">a defect?</text>
-          <text x="575" y="295" font-size="12" font-weight="bold">ACT → pink bowl</text>
-          <text x="780" y="370" font-size="12" font-weight="bold">ACT → green bowl</text>
+          <text x="575" y="295" font-size="12" font-weight="bold" opacity="0.5">ACT → pink bowl</text>
+          <text x="780" y="370" font-size="12" font-weight="bold" opacity="0.5">ACT → green bowl</text>
         </g>
         <g fill="#ffe08a" font-size="11" text-anchor="middle">
           <text x="400" y="178">no: turn to the next face</text>
@@ -96,6 +97,8 @@
           <text x="50" y="260">tested on recorded data</text>
           <rect x="20" y="272" width="22" height="12" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="6 4"/>
           <text x="50" y="282">trained or coded, never run end to end</text>
+          <rect x="20" y="294" width="22" height="12" fill="none" stroke="#ffe08a" stroke-width="3"/>
+          <text x="50" y="304">the Anomalib inspection steps</text>
         </g>
       </svg>
       <figcaption>The agreed cycle (15 Nov): four photos, three turns. Source: <code>ARCHITECTURE.md</code> §2.</figcaption>

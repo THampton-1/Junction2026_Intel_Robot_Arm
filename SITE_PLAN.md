@@ -91,3 +91,25 @@ anything they saved; treat that as a long shot.
 - **Autonomous run footage.** Closed for GitHub (19 Nov): no branch, fork, PR, release or
   teammate repo holds any; all 289 recorded episodes are teleop or the arm holding still. Only a
   teammate's phone could have it.
+
+## Status at end of session, 19 Nov
+
+| Page | State |
+|---|---|
+| Hero (`index.html`) | Done |
+| Anomalib (`detection.html`) | **Draft 3.** Decisions in `SITE_DECISIONS.md`. Blocked on D0 (which Test 4 labels count). |
+| Overview, Setup, Reflection, Sources, Team | Placeholders. Reflection has a "Limits of the defect model" slot filled from Anomalib. |
+| ACT vs VLA (`arm.html`) | Last, after talking to the team. |
+
+All site commits are local only; nothing is pushed and Pages isn't enabled.
+
+**Next session:** settle D0 first (5 minutes), then start a new page. Remaining by evidence
+strength: Setup (`build.html`), Reflection, Overview.
+
+**Parking lot**
+- Flip-through for Anomalib: video → photo → crop, three side by side.
+- The trigger chart under the cycle diagram: keep or move to Setup?
+- ep05 story (parked on Reflection).
+- Remove the "DRAFT · MOCK LAYOUT" banner when a page is final.
+- `theo_v2_ep33`: relabel or drop (its dot faces away from the side camera).
+- Ask Siongan about Modal training logs (see Open questions).
