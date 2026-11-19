@@ -1,12 +1,12 @@
 // Builds the shared retro frame (top bar, logo, left nav, footer) around each inner page's content.
 // To add or rename a page, edit NAV here and the matching links on index.html.
 const NAV = [
+  { file: "happened.html",   title: "Overview" },
   { file: "detection.html",  title: "Anomaly Scores" },
   { file: "arm.html",        title: "Robot Arm" },
   { file: "build.html",      title: "How We Built It" },
   { file: "team.html",       title: "Our Team" },
-  { file: "happened.html",   title: "What Happened", gap: true },
-  { file: "reflection.html", title: "On Reflection" },
+  { file: "reflection.html", title: "On Reflection", gap: true },
   { file: "evidence.html",   title: "For Junction 2026 Judges" },
 ];
 

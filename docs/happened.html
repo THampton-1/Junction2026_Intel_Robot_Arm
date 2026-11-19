@@ -3,36 +3,130 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Adapt · What Happened</title>
+<title>Adapt · The Overview</title>
 <link rel="stylesheet" href="assets/retro.css">
 </head>
 <body>
 <main id="content">
-  <h1>What Happened</h1>
-  <p class="sub">where it went wrong</p>
-  <div class="construction"><span>UNDER CONSTRUCTION</span></div>
+  <h1>The Overview</h1>
+  <p class="lead">Designed and implements each component for an end-to-end manufacturing robot, primed
+    for 360 degree detection optimised to remove image noise and threshold errors. Robust against
+    orientation and block colour changes.</p>
 
-  <section class="slot">
-    <h2>Timeline</h2>
-    <p class="hint">14–15 Nov from commit times, ending with the integration session.</p>
-  </section>
-  <section class="slot">
-    <h2>The plan</h2>
-    <p class="hint">One program owns the hardware; photo first; the website only watches.</p>
-  </section>
-  <section class="slot">
-    <h2>The integration session</h2>
-    <p class="hint">Gemini CLI on the robot laptop: Studio locking the hardware, rotation aborts, UI freeze, teleop deadlock, revert.</p>
-  </section>
-  <section class="slot">
-    <h2>The brownout</h2>
-    <p class="hint">Elbow servo supply fell from 12.4 V to 5.0 V; uncalibrated full-speed move into the hard stop. A brownout, not a short.</p>
-  </section>
-  <section class="slot">
-    <h2>Why it really failed</h2>
-    <p class="hint">All-at-once integration by an agent; no hardware limits; fixes never committed.</p>
-  </section>
+  <!-- Architecture: teach (before the run) above, the run loop below. Hover or tap a part for its description. -->
+  <figure class="fig scroll arch">
+    <svg viewBox="0 0 900 425" role="img" aria-label="Two halves. Teach: we moved the leader arm by hand, Physical AI Studio recorded it, Modal trained three ACT policies, and good-block photos trained PatchCore; OpenVINO converted every model. Run, on one Core Ultra laptop: ACT turns the block, the side camera watches, the trigger takes a photo, the crop keeps the block, PatchCore scores it; after four faces ACT sorts the block into pink or green." font-family="Arial, Helvetica, sans-serif">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="#ffffff"/>
+        </marker>
+      </defs>
+
+      <!-- Band labels and divider -->
+      <g fill="#ff9d1c" font-size="12" font-weight="bold" letter-spacing="1">
+        <text x="10" y="22">TEACH · BEFORE THE RUN</text>
+        <text x="10" y="200">RUN · ONE CORE ULTRA LAPTOP, EDGE AI</text>
+      </g>
+      <path d="M10 172 H890" stroke="#ffffff" stroke-opacity=".4" stroke-dasharray="4 6"/>
+
+      <!-- Arrows -->
+      <g fill="none" stroke="#ffffff" stroke-width="2" marker-end="url(#arr2)">
+        <path d="M160 63 H198"/><path d="M350 63 H388"/><path d="M540 63 H738"/>
+        <path d="M275 86 V98"/>
+        <path d="M350 123 H388"/><path d="M540 123 H738"/>
+        <path d="M815 146 V213"/>
+        <path d="M160 243 H188"/><path d="M340 243 H368"/><path d="M520 243 H548"/><path d="M700 243 H738"/>
+        <path d="M815 271 V298"/>
+        <path d="M755 325 H85 V273"/>
+        <path d="M815 352 V370"/>
+      </g>
+      <g fill="#ffe08a" font-size="11">
+        <text x="822" y="190">every model</text>
+        <text x="400" y="318">no: turn to the next face</text>
+        <text x="822" y="365">yes</text>
+      </g>
+
+      <!-- Teach half -->
+      <g stroke="#ffffff" stroke-width="2" fill="rgba(0,10,90,0.55)">
+        <g class="part" tabindex="0" data-name="Leader arm" data-tip="We moved a second 'leader' arm by hand and the robot copied it. Each run became one demonstration to learn from.">
+          <rect x="10" y="40" width="150" height="46"/></g>
+        <g class="part" tabindex="0" data-name="Physical AI Studio" data-tip="Intel's Physical AI Studio recorded every demonstration: three cameras and all six joints at 30 frames a second.">
+          <rect x="200" y="40" width="150" height="46"/></g>
+        <g class="part" tabindex="0" data-name="Modal" data-tip="Trained our three ACT policies on a cloud GPU: turn the block, drop it in green, drop it in pink.">
+          <rect x="390" y="40" width="150" height="46"/></g>
+        <g class="part" tabindex="0" data-name="Good-block photos" data-tip="Side-camera photos of good blocks only, taken with the same trigger and crop the robot uses, across all five block colours.">
+          <rect x="200" y="100" width="150" height="46"/></g>
+        <g class="part" tabindex="0" data-name="PatchCore training" data-tip="Anomalib's PatchCore learned what a good block looks like from 29 photos, in about three minutes.">
+          <rect x="390" y="100" width="150" height="46"/></g>
+        <g class="part" tabindex="0" data-name="OpenVINO" data-tip="Converted every model to run fast on Intel hardware, so the whole run happens on the laptop.">
+          <rect x="740" y="40" width="150" height="106"/></g>
+      </g>
+
+      <!-- Run half -->
+      <g stroke="#ffffff" stroke-width="2" fill="rgba(0,10,90,0.55)">
+        <g class="part" tabindex="0" data-name="ACT turns the block" data-tip="The imitation-learning policy grips the block, turns it 90° and parks back at the observation point.">
+          <rect x="10" y="215" width="150" height="56"/></g>
+        <g class="part" tabindex="0" data-name="Side camera" data-tip="Our most robust observer: of the three cameras, it kept good and defect blocks furthest apart.">
+          <rect x="190" y="215" width="150" height="56"/></g>
+        <g class="part" tabindex="0" data-name="Trigger" data-tip="Takes the observation photo only once the arm is parked out of shot, so every photo is taken the same way.">
+          <rect x="370" y="215" width="150" height="56"/></g>
+        <g class="part" tabindex="0" data-name="Crop" data-tip="Cuts the photo down to just the block, so the gripper and the table can't add noise.">
+          <rect x="550" y="215" width="150" height="56"/></g>
+        <g class="part" tabindex="0" data-name="PatchCore" data-tip="Scores how unusual the block looks next to the good ones. Above 0.37, that face is a defect.">
+          <rect x="740" y="215" width="150" height="56"/></g>
+        <g class="part" tabindex="0" data-name="Every face" data-tip="Photographs all four sides, and keeps going even after a defect, so the whole block is always inspected.">
+          <path d="M815 300 L875 325 L815 350 L755 325 z"/></g>
+        <g class="part" tabindex="0" data-name="Sort" data-tip="If any face was a defect, ACT drops the block in the pink bowl; otherwise in the green one.">
+          <rect x="640" y="372" width="250" height="44"/></g>
+      </g>
+
+      <!-- Labels (pointer-events off so hovering the text still highlights its box) -->
+      <g fill="#ffffff" font-size="13" text-anchor="middle" pointer-events="none">
+        <text x="85" y="60" font-weight="bold">Leader arm</text><text x="85" y="77" font-size="11">we teach by hand</text>
+        <text x="275" y="60" font-weight="bold">Physical AI Studio</text><text x="275" y="77" font-size="11">records demos</text>
+        <text x="465" y="60" font-weight="bold">Modal</text><text x="465" y="77" font-size="11">trains ACT ×3</text>
+        <text x="275" y="120" font-weight="bold">Good-block photos</text><text x="275" y="137" font-size="11">side camera, cropped</text>
+        <text x="465" y="120" font-weight="bold">PatchCore</text><text x="465" y="137" font-size="11">learns "good"</text>
+        <text x="815" y="88" font-weight="bold">OpenVINO</text><text x="815" y="105" font-size="11">runs on Intel</text>
+        <text x="85" y="239" font-weight="bold">ACT turns block</text><text x="85" y="256" font-size="11">90°, back to park</text>
+        <text x="265" y="239" font-weight="bold">Side camera</text><text x="265" y="256" font-size="11">30 fps video</text>
+        <text x="445" y="239" font-weight="bold">Trigger</text><text x="445" y="256" font-size="11">arm parked → photo</text>
+        <text x="625" y="239" font-weight="bold">Crop</text><text x="625" y="256" font-size="11">block only</text>
+        <text x="815" y="239" font-weight="bold">PatchCore</text><text x="815" y="256" font-size="11">scores the face</text>
+        <text x="815" y="322" font-size="12">4 faces</text><text x="815" y="337" font-size="12">done?</text>
+        <text x="765" y="391" font-weight="bold">Sort</text><text x="765" y="407" font-size="11">ACT → pink or green bowl</text>
+      </g>
+    </svg>
+    <p id="tip">Hover over or tap a part to see what it does.</p>
+  </figure>
+
+  <div class="split">
+    <section class="panel">
+      <h2>Tech stack</h2>
+      <p>Modal was used to train policies. Intel’s Core Ultra laptop GPU housed inference and
+        PatchCore detection training / testing. OpenVINO was used to convert models to run on Intel
+        hardware. ACT, transformer-based policy, trained on Teleoperative data. Gemini CLI was used
+        to support coding and set up.</p>
+    </section>
+    <section class="panel">
+      <h2>The problem</h2>
+      <p>See it. Detect it. Act on it. The Physical AI challenge asked us to prime a robotic arm to
+        inspect blocks, spotting faulty ones and sort them accordingly, running all from one laptop
+        as edge AI. It was our job to build the environment, the data, the architecture, the
+        training and testing process, and integration.</p>
+    </section>
+  </div>
 </main>
 <script src="assets/retro.js"></script>
+<script>
+  // Show each part's description under the diagram on hover, keyboard focus or tap.
+  const tip = document.getElementById("tip");
+  for (const part of document.querySelectorAll(".part")) {
+    const show = () => { tip.innerHTML = `<b>${part.dataset.name}.</b> ${part.dataset.tip}`; };
+    part.addEventListener("mouseenter", show);
+    part.addEventListener("focus", show);
+    part.addEventListener("click", show);
+  }
+</script>
 </body>
 </html>

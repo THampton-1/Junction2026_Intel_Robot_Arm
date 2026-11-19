@@ -185,3 +185,22 @@ details p, details ul { font-size: 13px; }
 .panel table.compare { width: auto; margin-top: 6px; }
 .panel table.compare td:not(:first-child), .panel table.compare th:not(:first-child) { text-align: center; }
 .heat figure { max-width: 340px; }   /* a lone tile stays tile-sized */
+
+/* ---- Overview page ---- */
+
+/* One-paragraph summary under the page title */
+.lead { font-size: 17px; font-weight: 300; margin: 6px 0 22px; max-width: 46em; }
+
+/* Architecture diagram: each part lights up on hover, and its description shows underneath */
+.arch { margin: 0 0 18px; }
+.part { cursor: pointer; outline: none; }
+.part:hover rect, .part:hover path, .part:focus rect, .part:focus path { stroke: var(--yellow); stroke-width: 3; }
+#tip {
+  min-height: 3.2em; margin: 6px 0 0; padding: 8px 12px; font-size: 13px;
+  background: rgba(0, 10, 90, .45); border: 1px solid rgba(255,255,255,.35);
+}
+#tip b { color: var(--yellow); }
+
+/* Two panels side by side; they stack on phones */
+.split { display: flex; flex-wrap: wrap; gap: 16px; }
+.split .panel { flex: 1 1 260px; margin-bottom: 0; }
