@@ -10,27 +10,139 @@
 <main id="content">
   <h1>Anomaly Scores</h1>
   <p class="sub">how Adapt spots a defect</p>
-  <div class="construction"><span>UNDER CONSTRUCTION</span></div>
+  <div class="construction"><span>DRAFT · MOCK LAYOUT</span></div>
 
-  <section class="slot">
+  <!-- The two headline numbers agreed for this page -->
+  <div class="stats">
+    <div class="stat">
+      <div class="big">7/7 · 6/7</div>
+      <div class="label">defects caught · good blocks passed, on 14 photos the model had never seen</div>
+      <div class="src">Test 4, threshold fixed in advance · <code>anomalib/test_4/</code></div>
+    </div>
+    <div class="stat">
+      <div class="big">0.127 → 0.252</div>
+      <div class="label">gap between the lowest-scoring defect and the highest-scoring good block, after removing one mislabelled training photo</div>
+      <div class="src">Test 3, 24 test photos · <code>anomalib/test_3/</code></div>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h2>Where the model sits in the cycle</h2>
+    <p>Every face of the block is photographed and scored before the arm decides where it goes.
+      A defect on the first face doesn't stop the cycle: all four faces are always checked, so
+      the whole inspection is shown.</p>
+    <figure class="fig scroll">
+      <svg viewBox="0 0 900 395" role="img" aria-labelledby="cycle-title" font-family="Arial, Helvetica, sans-serif">
+        <title id="cycle-title">Inspection cycle: ACT turns the block, the side camera's video goes to the trigger, the trigger's photo is cropped to the block, PatchCore scores it; after four faces the block goes to pink if any face is a defect, otherwise green.</title>
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#ffffff"/>
+          </marker>
+        </defs>
+        <g fill="none" stroke="#ffffff" stroke-width="2" marker-end="url(#arrow)">
+          <path d="M255 22 V48"/>
+          <path d="M150 80 H183"/><path d="M325 80 H358"/><path d="M500 80 H533"/><path d="M675 80 H708"/>
+          <path d="M780 110 V148"/>
+          <path d="M710 185 H80 V112"/>
+          <path d="M780 220 V253"/>
+          <path d="M710 290 H652"/>
+          <path d="M780 325 V343"/>
+        </g>
+        <!-- Solid border: tested on recorded data. Dashed: trained or coded, never run end to end. -->
+        <g stroke="#ffffff" stroke-width="2" fill="rgba(0,10,90,0.55)">
+          <rect x="10" y="50" width="140" height="60" stroke-dasharray="6 4"/>
+          <rect x="185" y="50" width="140" height="60"/>
+          <rect x="360" y="50" width="140" height="60"/>
+          <rect x="535" y="50" width="140" height="60"/>
+          <rect x="710" y="50" width="140" height="60"/>
+          <path d="M780 150 L850 185 L780 220 L710 185 z" stroke-dasharray="6 4"/>
+          <path d="M780 255 L850 290 L780 325 L710 290 z" stroke-dasharray="6 4"/>
+          <rect x="500" y="270" width="150" height="40" stroke-dasharray="6 4" fill="rgba(255,120,200,0.35)"/>
+          <rect x="710" y="345" width="140" height="40" stroke-dasharray="6 4" fill="rgba(60,200,120,0.35)"/>
+        </g>
+        <g fill="#ffffff" font-size="13" text-anchor="middle">
+          <text x="255" y="15" font-size="12">start: block on the mark, arm parked at X</text>
+          <text x="80" y="76" font-weight="bold">ACT turns block</text><text x="80" y="94" font-size="11">90°, back to X</text>
+          <text x="255" y="76" font-weight="bold">Side camera</text><text x="255" y="94" font-size="11">30 fps video</text>
+          <text x="430" y="76" font-weight="bold">Trigger</text><text x="430" y="94" font-size="11">arm at X → 1 photo</text>
+          <text x="605" y="76" font-weight="bold">Crop</text><text x="605" y="94" font-size="11">54 × 49 px, block only</text>
+          <text x="780" y="76" font-weight="bold">PatchCore</text><text x="780" y="94" font-size="11">score; &gt; 0.37 = defect</text>
+          <text x="780" y="182" font-size="12">4 faces</text><text x="780" y="197" font-size="12">scored?</text>
+          <text x="780" y="287" font-size="12">any face</text><text x="780" y="302" font-size="12">a defect?</text>
+          <text x="575" y="295" font-size="12" font-weight="bold">ACT → pink bowl</text>
+          <text x="780" y="370" font-size="12" font-weight="bold">ACT → green bowl</text>
+        </g>
+        <g fill="#ffe08a" font-size="11" text-anchor="middle">
+          <text x="400" y="178">no: turn to the next face</text>
+          <text x="795" y="240" text-anchor="start">yes</text>
+          <text x="682" y="283">yes</text>
+          <text x="795" y="338" text-anchor="start">no</text>
+          <text x="430" y="126">10/10 episodes, 1 photo each</text>
+          <text x="605" y="126">whole block, no claw, 10/10</text>
+          <text x="790" y="128" text-anchor="start">Tests 3 and 4</text>
+        </g>
+        <g font-size="11" fill="#ffffff">
+          <rect x="20" y="250" width="22" height="12" fill="none" stroke="#ffffff" stroke-width="2"/>
+          <text x="50" y="260">tested on recorded data</text>
+          <rect x="20" y="272" width="22" height="12" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="6 4"/>
+          <text x="50" y="282">trained or coded, never run end to end</text>
+        </g>
+      </svg>
+      <figcaption>The agreed cycle (15 Nov): four photos, three turns. Source: <code>ARCHITECTURE.md</code> §2.</figcaption>
+    </figure>
+  </section>
+
+  <section class="panel">
     <h2>How PatchCore works</h2>
-    <p class="hint">One paragraph: learns only from good blocks; score = distance of the strangest patch from the memory bank.</p>
+    <p>PatchCore only ever sees good blocks. It cuts each training photo into small patches,
+      describes every patch with a pretrained network, and keeps a bank of those descriptions.
+      A new photo's score is how far its strangest patch is from anything in the bank. A dot
+      is a patch the bank has never seen.</p>
+    <p class="src">Model: PatchCore, <code>wide_resnet50_2</code>, 29 good training photos across 5 colours.</p>
   </section>
-  <section class="slot">
-    <h2>Three rounds of tests</h2>
-    <p class="hint">Test 1 (claw, big vs small block) → Test 2.1 (all three cameras) → Test 3 (real dots, side camera, tight crop).</p>
+
+  <section class="panel">
+    <h2>From video to a photo of one block</h2>
+    <p>The trigger watches the arm's joints, not the picture. When the arm has been parked at
+      the reset pose for 5 frames (0.17 s), it takes one photo. The photo is then cut to a fixed
+      54 × 49 px box, measured so it holds the whole block and none of the claw.</p>
+    <div class="chartslot"><b>Chart to come: the trigger firing.</b> Distance of the arm from the
+      reset pose across episode 00, with the ±10 "in pose" band and the photo at frame 1011.
+      Data: <code>datasets/90_degree_turn/trajectories/episode_00_joints.csv</code>.</div>
+    <figure class="fig">
+      <img src="assets/img/crop_box.png" alt="Ten side-camera photos, each with the final crop box in cyan around the whole block and an earlier, looser box in yellow">
+      <figcaption>All 10 turn episodes: final crop in cyan, the earlier, looser box in yellow. Source: <code>algorithm/README.md</code>.</figcaption>
+    </figure>
   </section>
-  <section class="slot">
-    <h2>Choosing the camera</h2>
-    <p class="hint">Test 2.1 table: claw 0.943, side 1.00 (+0.156 gap), top 1.00 (+0.103). Caveat: chosen on the stand-in defect.</p>
+
+  <section class="panel">
+    <h2>Four tests, from baseline to held-out check</h2>
+    <table>
+      <tr><th>Test</th><th>Question</th><th>Answer</th></tr>
+      <tr class="group"><td colspan="3">Baseline</td></tr>
+      <tr><td>1</td><td>Can PatchCore tell blocks apart? (stand-in defect: big block, claw camera)</td><td>Yes, gap 0.044. 3.78 ms on the Xe3 iGPU against 75 ms on the CPU.</td></tr>
+      <tr><td>2.1</td><td>Which camera?</td><td>Side: gap +0.156. Top: +0.103. Claw: scores overlap.</td></tr>
+      <tr class="group"><td colspan="3">Stretch</td></tr>
+      <tr><td>3</td><td>Can it see a dot? (side camera, tight crop)</td><td>15/15 visible defects, 8/8 good. Threshold set at 0.37.</td></tr>
+      <tr><td>4</td><td>Does 0.37 hold on unseen photos?</td><td>7/7 defects, 6/7 good. The one miss was predicted.</td></tr>
+    </table>
+    <div class="chartslot"><b>Chart to come: choosing the camera.</b> Every Test 2.1 photo's score,
+      one column per camera, good and defect side by side. The claw column overlaps; the side
+      column doesn't. Data: <code>anomalib/test_2/Test 2.1/logs/</code>.</div>
+    <div class="chartslot"><b>Chart to come: one bad training photo.</b> Each Test 3 photo's score
+      with and without ep05 in training, joined by a line. Defects rise, good blocks fall.
+      Data: <code>anomalib/test_3/logs/</code>.</div>
+    <div class="chartslot"><b>Chart to come: set, then checked.</b> Test 3 and Test 4 scores on one
+      axis with the 0.37 line. Left panel: where the threshold was set. Right panel: where it was
+      tested. ep33 and ep04 labelled. Data: <code>test_3/logs/</code>, <code>test_4/scores.csv</code>.</div>
   </section>
-  <section class="slot">
-    <h2>The final model</h2>
-    <p class="hint">Score chart of the 24 test photos with the 0.37 threshold; the gallery of crops; 15/15 visible defects, 8/8 good.</p>
-  </section>
-  <section class="slot">
+
+  <section class="panel">
     <h2>Limits</h2>
-    <p class="hint">Threshold chosen on the test photos; small data; speed not measured on the robot laptop.</p>
+    <p>Small numbers: 24 photos in Test 3 and 14 in Test 4, so one photo moves a rate by 4 to 14
+      points. Every test ran offline on recorded photos. The final model was never run live on the
+      arm, and its speed was never measured on the robot's laptop. A dot on a face the side camera
+      can't see (ep33) can't be caught by any side-view model.</p>
   </section>
 </main>
 <script src="assets/retro.js"></script>

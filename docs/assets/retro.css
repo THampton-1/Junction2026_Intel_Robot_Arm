@@ -89,3 +89,50 @@ h1 { font-size: 38px; font-weight: 300; margin: 0 0 4px; }
   #content { padding: 16px 0 0 16px; }
   .sub { margin-left: 0; }
 }
+
+/* ---- Filled-page components ---- */
+
+/* Headline numbers: one big figure, a label, and its source */
+.stats { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 22px; }
+.stat {
+  flex: 1 1 220px; padding: 12px 16px; background: rgba(0, 10, 90, .45);
+  border: 2px outset rgba(255,255,255,.5); box-shadow: 3px 3px 0 var(--blue-dark);
+}
+.stat .big { font-size: 34px; font-weight: bold; color: var(--yellow); line-height: 1.1; }
+.stat .label { font-size: 13px; margin-top: 4px; }
+.stat .src { font-size: 11px; opacity: .7; margin-top: 6px; }
+
+/* A filled section */
+.panel {
+  border: 2px outset rgba(255,255,255,.5); background: rgba(0, 10, 90, .3);
+  padding: 12px 16px; margin-bottom: 16px;
+}
+.panel h2 { font-size: 16px; margin: 0 0 8px; text-decoration: underline; }
+.panel h2::before {
+  content: ""; display: inline-block; border: 5px solid transparent; border-left: 7px solid var(--orange);
+  margin-right: 6px; vertical-align: middle;
+}
+.panel p { margin: 0 0 8px; }
+.src { font-size: 11px; opacity: .7; }
+.src code, .panel code { font-size: 11px; }
+
+/* Images and figures */
+.fig { margin: 10px 0; }
+.fig img { display: block; max-width: 100%; height: auto; border: 2px inset rgba(255,255,255,.5); image-rendering: pixelated; }
+.fig figcaption { font-size: 12px; opacity: .85; margin-top: 4px; }
+.scroll { overflow-x: auto; }
+.scroll svg { min-width: 640px; }
+
+/* A chart that has not been drawn yet */
+.chartslot {
+  border: 2px dashed var(--yellow); padding: 10px 14px; margin: 10px 0; background: rgba(0,0,0,.15);
+  font-size: 12px;
+}
+.chartslot b { color: var(--yellow); }
+
+/* Tables */
+.panel table { border-collapse: collapse; width: 100%; font-size: 12px; }
+.panel th, .panel td { border: 1px solid rgba(255,255,255,.35); padding: 4px 6px; text-align: left; vertical-align: top; }
+.panel th { background: rgba(0, 10, 90, .5); }
+.panel tr.group td { background: rgba(255, 157, 28, .25); font-weight: bold; }
+code { overflow-wrap: anywhere; }   /* long file paths wrap instead of widening the page on phones */
