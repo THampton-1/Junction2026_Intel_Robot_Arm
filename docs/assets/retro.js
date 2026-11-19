@@ -3,11 +3,6 @@
 const NAV = [
   { file: "happened.html",   title: "Overview" },
   { file: "detection.html",  title: "Anomaly Scores" },
-  { file: "arm.html",        title: "Robot Arm" },
-  { file: "build.html",      title: "How We Built It" },
-  { file: "team.html",       title: "Our Team" },
-  { file: "reflection.html", title: "On Reflection", gap: true },
-  { file: "evidence.html",   title: "For Junction 2026 Judges" },
 ];
 
 function buildFrame() {
