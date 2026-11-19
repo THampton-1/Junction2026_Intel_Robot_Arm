@@ -10,18 +10,49 @@
 <main id="content">
   <h1>On Reflection</h1>
 
-  <section class="panel">
-    <h2>Tired Integration: The Downfall</h2>
-    <p class="towrite">Story to be written.</p>
-  </section>
+  <div class="sides">
+    <!-- Left: the story -->
+    <div class="side">
+      <section class="panel">
+        <h2>What we are proudest of</h2>
+        <p class="towrite">To be written.</p>
+      </section>
 
-  <section class="panel">
-    <h2>Next Time</h2>
-    <ul>
-      <li>Quantify our model improvements</li>
-      <li>Integrate early</li>
-    </ul>
-  </section>
+      <section class="panel">
+        <h2>Tired Integration: The Downfall</h2>
+        <p>In our 39th hour, 7am Sunday, we attempted to complete the process by integrating each
+          component of our architecture in one single step. This oversight caused a shorting of our
+          lead robotic arm. Bringing an end to our Hackathon.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Next time</h2>
+        <p>In our 42 hours our goal was, 1. lose as much sleep and 2. learn as much about Physical AI
+          as possible. We think we did just that, here is some of thoughts on what we would do next
+          time:</p>
+        <p><b>Quantify our model improvement:</b> The eye test is exciting, but quantifying training
+          loss against training time would have supported our model choice massively.</p>
+        <p><b>Integrate early:</b> The power of decomposition felt intuitively powerful to us, and yet
+          low on time we did not go through with it. Given the opportunity, building confidence on
+          how models interact would have allowed us to break down the process further, allowing us
+          to optimise each model for more complicated tasks.</p>
+      </section>
+    </div>
+
+    <!-- Right: the data and the teleop video -->
+    <div class="side">
+      <section class="panel">
+        <h2>Our data</h2>
+        <video class="media" src="assets/video/collage_289.mp4" poster="assets/img/collage_289.jpg"
+          autoplay muted loop playsinline aria-label="All 289 recorded demonstrations playing at once in a 17 by 17 grid"></video>
+      </section>
+
+      <section class="panel">
+        <h2>Teleop</h2>
+        <div class="mediaslot">Teleop video goes here</div>
+      </section>
+    </div>
+  </div>
 </main>
 <script src="assets/retro.js"></script>
 </body>

@@ -207,3 +207,18 @@ details p, details ul { font-size: 13px; }
 
 /* A section whose text hasn't been written yet */
 .towrite { font-style: italic; opacity: .6; }
+
+/* ---- Reflection page ---- */
+
+/* Two columns of panels: story on the left, media on the right; they stack on phones */
+.sides { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.side { flex: 1 1 300px; min-width: 0; }
+.side .panel:last-child { margin-bottom: 0; }
+
+/* A video filling its panel, and the empty frame for one still to come */
+.media { display: block; width: 100%; height: auto; border: 2px inset rgba(255,255,255,.5); }
+.mediaslot {
+  aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-style: italic; opacity: .6;
+  background: rgba(0, 10, 90, .3); border: 2px inset rgba(255,255,255,.5);
+}
