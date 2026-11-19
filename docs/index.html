@@ -133,7 +133,7 @@
   }
   /* Same 1000x700 box and scale as #stage, so the old and new layouts line up under the divider */
   #intro-stage { position: absolute; left: 50%; top: 50%; width: 1000px; height: 700px; overflow: hidden; transform-origin: center; }
-  #intro-stage img { display: block; width: 1000px; height: auto; margin-top: -10px; }   /* lines the two headlines up */
+  #intro-stage img { display: block; width: 1000px; height: auto; margin-top: -5px; }   /* lines the two layouts up */
   #divider {
     position: fixed; top: 0; bottom: 0; left: 0; width: 3px; margin-left: -1.5px; z-index: 11; display: none;
     background: #ffe08a; box-shadow: 0 0 14px 2px #ffe08a;
@@ -144,6 +144,7 @@
     font-size: 13px; font-weight: bold; letter-spacing: 1px;
   }
   .no-intro #intro, .no-intro #divider { display: none; }
+  #original { position: absolute; left: 14px; top: 628px; width: 180px; }
 </style>
 <script>
   // Skip the wipe if it already played in this tab, or if the visitor prefers less motion.
@@ -156,7 +157,7 @@
 </head>
 <body>
 <!-- Opening wipe (see the script at the end) -->
-<div id="intro" aria-hidden="true"><div id="intro-stage"><img src="assets/Intel_2000s_Screenshot.png" alt=""></div></div>
+<div id="intro" aria-hidden="true"><div id="intro-stage"><img src="assets/img/intel_2000.png" alt=""></div></div>
 <div id="divider" aria-hidden="true"><span>2026 &nbsp;|&nbsp; 2000</span></div>
 <div id="stage">
   <div id="leftcol"></div>
@@ -208,6 +209,7 @@
     <div class="stage" id="st-2"><b class="arrow">Act</b>ACT policies turn the block, then sort it into the green or pink bowl.</div>
   </div>
 
+  <a class="nav" id="original" href="#" role="button" title="See the 2000 intel.com page this design comes from">Original</a>
   <div id="footer">*Built at Junction 2026 on Intel&reg; Core&trade; Ultra &copy; 2026 Adapt</div>
 </div>
 
@@ -351,17 +353,21 @@ requestAnimationFrame(frame);
 </script>
 <script>
 // ---------------------------------------------------------------- opening wipe
-// Hold intel.com (2000) on screen for 2 s, then sweep a divider left to right to reveal Adapt.
-// Plays once per visit; a click or key press skips it.
+// intel.com (2000) sits on a layer above Adapt; a divider sweeps across to swap them.
+// First visit in a tab: hold intel.com for 2 s, then sweep left to right to reveal Adapt.
+// A click or key press during the hold starts the sweep early.
+// The Original button sweeps intel.com back over Adapt, holds 2 s, then reveals Adapt again.
 (function () {
+  const root = document.documentElement;
   const intro = document.getElementById("intro");
   const divider = document.getElementById("divider");
   const img = intro.querySelector("img");
-  if (document.documentElement.classList.contains("no-intro")) return;
+  const button = document.getElementById("original");
 
   const HOLD_MS = 2000;
   const WIPE_MS = 1400;
-  let finished = false;
+  let busy = false;        // true while intel.com is on screen or a sweep is running
+  let holdTimer = null;    // set only during the 2 s hold
 
   function fitIntro() {
     const scale = Math.min(innerWidth / 1000, innerHeight / 700);
@@ -370,46 +376,82 @@ requestAnimationFrame(frame);
   addEventListener("resize", fitIntro);
   fitIntro();
 
-  function finish() {
-    if (finished) return;
-    finished = true;
-    intro.remove();
-    divider.remove();
-    try { sessionStorage.setItem("adaptIntroSeen", "1"); } catch (e) {}
-  }
-
   // Smooth start and stop: slow, fast, slow.
   function easeInOut(t) {
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
 
-  function wipe() {
-    if (finished) return;
+  // intel.com shows to the right of x, Adapt to the left.
+  function placeDivider(x) {
+    intro.style.clipPath = `inset(0 0 0 ${x}px)`;
+    divider.style.left = `${x}px`;
+  }
+
+  // Move the divider from one x to another, then call done.
+  function sweep(from, to, done) {
+    intro.style.display = "block";
     divider.style.display = "block";
     const start = performance.now();
     function step(now) {
-      if (finished) return;
       const t = Math.min((now - start) / WIPE_MS, 1);
-      const x = easeInOut(t) * innerWidth;
-      intro.style.clipPath = `inset(0 0 0 ${x}px)`;
-      divider.style.left = `${x}px`;
+      placeDivider(from + (to - from) * easeInOut(t));
       if (t < 1) requestAnimationFrame(step);
-      else finish();
+      else done();
     }
     requestAnimationFrame(step);
   }
 
-  // Start the 2 s hold only once the screenshot is showing; give up if it never loads.
-  function begin() { setTimeout(wipe, HOLD_MS); }
-  if (img.complete && img.naturalWidth > 0) begin();
-  else {
-    img.addEventListener("load", begin);
-    img.addEventListener("error", finish);
-    setTimeout(() => { if (!img.complete) finish(); }, 4000);
+  function hideIntro() {
+    intro.style.display = "none";
+    divider.style.display = "none";
+    busy = false;
   }
 
-  intro.addEventListener("click", finish);
-  addEventListener("keydown", finish, { once: true });
+  // Sweep left to right to reveal Adapt.
+  function reveal() {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    sweep(0, innerWidth, hideIntro);
+  }
+
+  // intel.com fills the screen for 2 s, then reveal.
+  function hold() {
+    intro.style.display = "block";
+    divider.style.display = "none";
+    placeDivider(0);
+    holdTimer = setTimeout(reveal, HOLD_MS);
+  }
+
+  // A click or key press during the hold starts the sweep now.
+  function skip() {
+    if (holdTimer) reveal();
+  }
+  intro.addEventListener("click", skip);
+  addEventListener("keydown", skip);
+
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    if (busy) return;
+    busy = true;
+    sweep(innerWidth, 0, hold);
+  });
+
+  // First visit in this tab? (The check at the top of the page sets no-intro if not.)
+  const firstVisit = !root.classList.contains("no-intro");
+  intro.style.display = "none";
+  root.classList.remove("no-intro");
+  if (!firstVisit) return;
+
+  busy = true;
+  try { sessionStorage.setItem("adaptIntroSeen", "1"); } catch (e) {}
+  intro.style.display = "block";
+  placeDivider(0);
+  if (img.complete && img.naturalWidth > 0) hold();
+  else {
+    img.addEventListener("load", hold);
+    img.addEventListener("error", hideIntro);
+    setTimeout(() => { if (!img.complete) hideIntro(); }, 4000);
+  }
 })();
 </script>
 </body>
