@@ -75,5 +75,19 @@ anything they saved; treat that as a long shot.
   encoder. A curve that falls and flattens shows the policy fit the demos. It lives with the
   trained model in Studio, under `~/.local/share/physicalai/models/<model id>/` on the robot
   laptop. Decide whether it's worth fetching.
-- **SmolVLA.** The rest of the team knows more. Talk to them before writing page 4.
-- **Autonomous run footage.** Does anyone have phone video of ACT running on its own?
+- **Training loss on Modal (serious stretch, but possible).** Studio itself was self-hosted on the
+  laptop with no account, but ACT trained on Modal under Siongan's account (profile `siongan`, app
+  `physicalai-trainer`, volume `physicalai-training`; see `MASTER_PROJECT_CONTEXT.md` Step 5).
+  Odds are low: Studio's trainer deletes the dataset copy, checkpoints and `metrics.csv` once the
+  model is downloaded (`trainer/api.py` `delete_job`, called from
+  `services/training_backends/remote.py`, both pre-dating the event), and Modal keeps app logs
+  1 day on Starter, 30 days on Team. The Modal app was Gemini-built and isn't in the repo, so the
+  cleanup can't be confirmed. Ask Siongan to (1) check the Modal plan, and if Team, read
+  `physicalai-trainer` logs from 14 Nov for loss values, before about 14 Dec; (2) run
+  `modal volume ls physicalai-training` and look for `models/` or `metrics.csv`. Modal can't hold
+  autonomous runs: ACT ran locally on the laptop.
+- **SmolVLA.** Never trained (`MASTER_PROJECT_CONTEXT.md`: deferred). Talk to the team before
+  writing page 4.
+- **Autonomous run footage.** Closed for GitHub (19 Nov): no branch, fork, PR, release or
+  teammate repo holds any; all 289 recorded episodes are teleop or the arm holding still. Only a
+  teammate's phone could have it.
