@@ -35,22 +35,25 @@
     <p class="src">Videos are demonstrations we taught the policies with. Placeholder clips: swap for your picks.</p>
   </section>
 
-  <!-- ACT vs VLA -->
+  <!-- ACT vs SmolVLA -->
   <div class="split">
     <section class="panel">
       <h2>ACT</h2>
-      <p>Action Chunking Transformer: a small model that watches the cameras and joint angles and
-        predicts the next chunk of movement (about 3 seconds) in one go.</p>
+      <p>Action Chunking Transformer: a small specialist (about 50–80 million parameters), trained
+        from scratch on our own demos. It watches the cameras and joint angles and predicts the
+        next 3 seconds of movement in one go.</p>
       <ul>
-        <li>Learns from tens of demos</li>
-        <li>Trains in minutes</li>
+        <li>One policy per task</li>
+        <li>Learns our exact arm from the first step</li>
+        <li>Small, so quick to train</li>
         <li>Smooth motion, because it plans in chunks</li>
       </ul>
     </section>
     <section class="panel">
-      <h2>VLA</h2>
-      <p>Vision-Language-Action model: a large model pretrained on images and text, fine-tuned to
-        turn a camera view and a written instruction into movement.</p>
+      <h2>SmolVLA</h2>
+      <p>A compact Vision-Language-Action model (about 450 million parameters), pretrained on
+        other robots' data, then fine-tuned to turn camera views and a written instruction into
+        movement.</p>
       <ul>
         <li>One model for many tasks</li>
         <li>Takes instructions in plain language</li>
@@ -60,15 +63,34 @@
   </div>
   <section class="panel" style="margin-top:16px">
     <h2>Our choice: ACT</h2>
-    <p>With 6 to 61 demos per dataset, we needed a model that learns quickly from very little.
-      ACT was built for exactly that: its authors taught real tasks from only 10 minutes of
-      demonstrations. It let us record, train and try again within the hackathon.</p>
+    <p>We trained both. On our first, rushed demos they did equally badly. Once our demos were
+      consistent, ACT reproduced them far quicker. SmolVLA starts with habits learned on other
+      robots and has to override them; ACT has nothing to override. At a fraction of the size, it
+      also trains much faster. In a 42-hour sprint, time was our bottleneck, and ACT let us
+      record, train and try again.</p>
   </section>
-  <!-- Final point: smoother data -->
+
+  <!-- Smoother data -->
   <section class="panel">
     <h2>Smaller, clearer data</h2>
-    <p class="towrite">To be written: a couple of lines on adjusting our demos for smoothness.</p>
+    <p>Our first demos were fast. Quick human movement is inconsistent, and the model needs many
+      examples to override that noise. So we slowed down: longer, smoother demos that agree with
+      each other, and fewer of them.</p>
+    <p>The heatmap shows the change. Our first green dataset (22 demos) is a wide smear; the last
+      (6 demos) is one clear path for the model to copy.</p>
     <img class="chart" src="assets/charts/agreement.png" alt="Heatmaps of the elbow angle across every demo, stretched onto one timeline. The first green version (22 demos) is a wide smear; the last (6 demos) is one tight path. Pink narrows less, from 22 demos to 12.">
+  </section>
+
+  <!-- Final point: the Intel challenge -->
+  <section class="panel">
+    <h2>Built for the Intel laptop</h2>
+    <p>We trained in the cloud and ran on the device. Training on the laptop's CPU was still going
+      after three and a half hours, so we moved it to a cloud GPU. The finished policies were
+      exported to OpenVINO and ran on the Intel Core Ultra laptop itself, with no cloud at run
+      time.</p>
+    <p>ACT's size is what makes that fit: all three policies share one laptop with the PatchCore
+      inspection model. And because ACT predicts 100 moves (3.3 seconds) per pass, it only needs
+      to run about once every three seconds.</p>
   </section>
 </main>
 <script src="assets/retro.js"></script>
