@@ -2,63 +2,70 @@
 r"""
 Draw the chart for the website's Imitation Learning page with plotnine (ggplot for Python).
 
-demos.png - every teleop demonstration of the two sorting skills, by dataset version: how long
-            each demo lasted, and how jerky the arm's movement was.
-            Source: datasets/<dataset>/trajectories/episode_*_joints.csv
+agreement.png - how closely the demonstrations of one skill agree with each other, first dataset
+                version against the last. Each demo is stretched onto the same 0-100% timeline,
+                then each column of the heatmap shows where the elbow joint was across all the
+                demos at that moment. A tight bright band means the demos agree; a wide dim smear
+                means they don't.
+                Source: datasets/<dataset>/trajectories/episode_*_joints.csv (action_elbow_flex)
 
-"Jerkiness" is the average size of the frame-to-frame change in joint speed, summed over the six
-joints: mean over frames of sum_j |a_j[t+1] - 2 a_j[t] + a_j[t-1]|, in degrees per frame squared,
-where a_j is the leader arm's commanded angle (the action_* columns). Lower means smoother.
+Each demo adds a small Gaussian bump (SIGMA degrees wide) at its angle, and the bumps are averaged
+over the demos, so every column integrates to 1 whatever the number of demos.
 
 Run with the site-charts venv:
-    C:SERS	HEOHENVSSITE-CHARTSSCRIPTSPYTHON.EXE scripts/make_learning_charts.py
+    C:\Users\theoh\venvs\site-charts\Scripts\python.exe scripts/make_learning_charts.py
 """
 
 from pathlib import Path
 
+import matplotlib
 import numpy as np
 import pandas as pd
+from mizani.bounds import squish   # squish: values above the cap take the top colour
 from plotnine import (
-    aes, element_blank, element_line, element_rect, element_text, facet_grid, geom_point,
-    ggplot, labs, position_jitter, stat_summary, theme, theme_minimal,
+    aes, element_blank, element_rect, element_text, facet_wrap, geom_raster, ggplot, labs,
+    scale_fill_gradientn, scale_x_continuous, theme, theme_minimal,
 )
 
 REPO = Path(__file__).resolve().parent.parent
 DATASETS = REPO / "datasets"
 OUT = REPO / "docs" / "assets" / "charts"
 
-# Same colours as make_site_charts.py: white ink and the site's yellow on the page's blue
+# Same colours as make_site_charts.py: white ink on the page's blue
 SURFACE = "#0a238f"
 INK = "#ffffff"
-LINE = "#ffe08a"
-FPS = 30
 
-# The sorting datasets in version order. There is no exported pink v2.
-VERSIONS = [
-    ("Drop in green", "v1", "block_to_green"),
-    ("Drop in green", "v2", "block_to_green_v2"),
-    ("Drop in green", "v3", "block_to_green_v3"),
-    ("Drop in green", "v4", "block_to_green_v4"),
-    ("Drop in pink", "v1", "block_to_pink"),
-    ("Drop in pink", "v3", "block_to_pink_v3"),
-    ("Drop in pink", "v4", "block_to_pink_v4"),
-    ("Drop in pink", "v5", "block_to_pink_v5"),
+JOINT = "action_elbow_flex"   # the joint with the most movement, so the widest spread
+TIME_STEPS = 400              # points on the 0-100% timeline
+ANGLE_STEP = 0.5              # degrees per heatmap row
+SIGMA = 2.0                   # width of each demo's bump, in degrees
+FAINT = 0.002                 # below this the cell is left see-through, so the page blue shows
+CAP = 0.12                    # colour scale tops out here, so the still rest pose at 100 degrees
+                              # (every demo identical) does not wash out the moving part
+# Inferno without its black end, which would vanish into the page blue
+COLOURS = [matplotlib.colors.to_hex(c) for c in matplotlib.colormaps["inferno"](np.linspace(0.3, 1, 9))]
+
+# First and last version of each sorting skill. Panel titles are in reading order.
+PANELS = [
+    ("Green · first version · 22 demos", "block_to_green"),
+    ("Green · last version · 6 demos", "block_to_green_v4"),
+    ("Pink · first version · 22 demos", "block_to_pink"),
+    ("Pink · last version · 12 demos", "block_to_pink_v5"),
 ]
 
 
 def site_theme():
-    """White text on the page's blue, faint grid, no chart junk."""
+    """White text on the page's blue, no grid: the heatmap is the content."""
     return theme_minimal(base_size=11) + theme(
         plot_background=element_rect(fill=SURFACE, color=SURFACE),
         panel_background=element_rect(fill=SURFACE, color=SURFACE),
         text=element_text(color=INK),
         axis_text=element_text(color=INK),
         strip_text=element_text(color=INK, size=11, weight="bold"),
-        panel_grid_major=element_line(color="#ffffff", alpha=0.15, size=0.4),
+        panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_x=element_blank(),
-        panel_spacing_y=0.06,
         panel_border=element_rect(color="#ffffff", fill=None, alpha=0.35),
+        panel_spacing=0.04,
         legend_position="none",
         plot_title=element_text(size=13, weight="bold"),
         plot_subtitle=element_text(size=10),
@@ -66,50 +73,62 @@ def site_theme():
     )
 
 
-def episode_rows():
-    """One row per demonstration: its length in seconds and its jerkiness."""
+def stretched_demos(folder):
+    """Each demo's elbow angle, resampled onto the same 0-100% timeline. Shape: demos x TIME_STEPS."""
+    timeline = np.linspace(0, 1, TIME_STEPS)
+    demos = []
+    for path in sorted((DATASETS / folder / "trajectories").glob("episode_*_joints.csv")):
+        angle = pd.read_csv(path)[JOINT].to_numpy()
+        own_time = np.linspace(0, 1, len(angle))
+        demos.append(np.interp(timeline, own_time, angle))
+    return np.array(demos)
+
+
+def heat_rows(title, demos, angles):
+    """One row per heatmap cell: % through the demo, angle, and the share of demos there."""
     rows = []
-    for task, version, folder in VERSIONS:
-        files = sorted((DATASETS / folder / "trajectories").glob("episode_*_joints.csv"))
-        for path in files:
-            frames = pd.read_csv(path)
-            action_columns = [c for c in frames.columns if c.startswith("action_")]
-            angles = frames[action_columns].to_numpy()
-            second_difference = np.diff(angles, n=2, axis=0)
-            jerkiness = np.abs(second_difference).sum(axis=1).mean()
-            rows.append({
-                "task": task,
-                "version": f"{version}\n{len(files)} demos",
-                "Seconds per demo": len(frames) / FPS,
-                "Jerkiness": jerkiness,
-            })
-    return pd.DataFrame(rows)
+    for step in range(TIME_STEPS):
+        bumps = np.exp(-0.5 * ((angles[:, None] - demos[None, :, step]) / SIGMA) ** 2)
+        bumps /= SIGMA * np.sqrt(2 * np.pi)
+        density = bumps.mean(axis=1) * ANGLE_STEP     # share of demos in each angle row
+        for angle, share in zip(angles, density):
+            if share >= FAINT:
+                rows.append({"panel": title, "percent": 100 * step / (TIME_STEPS - 1),
+                             "angle": angle, "share": share})
+    return rows
 
 
-def chart_demos():
-    wide = episode_rows()
-    long = wide.melt(id_vars=["task", "version"], var_name="measure", value_name="value")
-    long["measure"] = pd.Categorical(long["measure"], ["Seconds per demo", "Jerkiness"])
+def chart_agreement():
+    all_demos = {title: stretched_demos(folder) for title, folder in PANELS}
+    low = min(d.min() for d in all_demos.values()) - 3 * SIGMA
+    high = max(d.max() for d in all_demos.values()) + 3 * SIGMA
+    angles = np.arange(low, high, ANGLE_STEP)
 
-    # Print the per-version means so the page copy can quote them
-    print(wide.groupby(["task", "version"], sort=False)[["Seconds per demo", "Jerkiness"]].mean().round(2))
+    rows = []
+    for title, demos in all_demos.items():
+        rows += heat_rows(title, demos, angles)
+        # Spread: average over the timeline of the standard deviation across demos
+        print(f"{title}: spread {demos.std(axis=0).mean():.1f} deg")
+    frame = pd.DataFrame(rows)
+    frame["panel"] = pd.Categorical(frame["panel"], [title for title, _ in PANELS])
 
     plot = (
-        ggplot(long, aes("version", "value"))
-        + geom_point(position=position_jitter(width=0.15, height=0, random_state=1), color=INK, alpha=0.55, size=1.6)
-        + stat_summary(fun_y=np.mean, geom="point", shape="_", size=14, color=LINE, stroke=1.2)
-        + facet_grid("measure ~ task", scales="free")
+        ggplot(frame, aes("percent", "angle", fill="share"))
+        + geom_raster()
+        + facet_wrap("panel", ncol=2)
+        + scale_fill_gradientn(colors=COLOURS, limits=(FAINT, CAP), oob=squish)
+        + scale_x_continuous(breaks=[0, 50, 100], labels=["start", "halfway", "end"])
         + labs(
-            x="", y="",
-            title="Fewer demos, done slower and smoother",
-            subtitle="Each dot is one demonstration; the yellow bar is the version's average",
-            caption="Jerkiness: average frame-to-frame change in joint speed, summed over six joints (deg per frame²)",
+            x="", y="Elbow angle (degrees)",
+            title="From noise to a clear path",
+            subtitle="Where the elbow was, across every demo, at each moment of the move. Brighter = more demos agree",
+            caption="Each demo stretched onto the same start-to-end timeline",
         )
         + site_theme()
     )
-    plot.save(OUT / "demos.png", width=8, height=5.6, dpi=160, verbose=False)
-    print("saved demos.png")
+    plot.save(OUT / "agreement.png", width=8, height=6, dpi=160, verbose=False)
+    print("saved agreement.png")
 
 
 if __name__ == "__main__":
-    chart_demos()
+    chart_agreement()
