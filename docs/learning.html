@@ -63,11 +63,9 @@
   </div>
   <section class="panel" style="margin-top:16px">
     <h2>Our choice: ACT</h2>
-    <p>We trained both. On our first, rushed demos they did equally badly. Once our demos were
-      consistent, ACT reproduced them far quicker. SmolVLA starts with habits learned on other
-      robots and has to override them; ACT has nothing to override. At a fraction of the size, it
-      also trains much faster. In a 42-hour sprint, time was our bottleneck, and ACT let us
-      record, train and try again.</p>
+    <p>At a fraction of the size, ACT trains much faster. Without Pre-training to override, ACT can
+      learn on a much smaller quantity of episodes. In the hackathon sprint, ACT allowed us to train
+      and iterate much faster.</p>
   </section>
 
   <!-- Smoother data -->
@@ -81,17 +79,6 @@
     <img class="chart" src="assets/charts/agreement.png" alt="Heatmaps of the elbow angle across every demo, stretched onto one timeline. The first green version (22 demos) is a wide smear; the last (6 demos) is one tight path. Pink narrows less, from 22 demos to 12.">
   </section>
 
-  <!-- Final point: the Intel challenge -->
-  <section class="panel">
-    <h2>Built for the Intel laptop</h2>
-    <p>We trained in the cloud and ran on the device. Training on the laptop's CPU was still going
-      after three and a half hours, so we moved it to a cloud GPU. The finished policies were
-      exported to OpenVINO and ran on the Intel Core Ultra laptop itself, with no cloud at run
-      time.</p>
-    <p>ACT's size is what makes that fit: all three policies share one laptop with the PatchCore
-      inspection model. And because ACT predicts 100 moves (3.3 seconds) per pass, it only needs
-      to run about once every three seconds.</p>
-  </section>
 </main>
 <script src="assets/retro.js"></script>
 </body>
