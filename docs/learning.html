@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adapt · Imitation Learning</title>
+<link rel="stylesheet" href="assets/retro.css">
+</head>
+<body>
+<main id="content">
+  <h1>Imitation Learning</h1>
+  <p class="lead">Trained on human movement, selected for training speeds and robustness.</p>
+
+  <div class="construction"><span>DRAFT · LAYOUT FOR REVIEW</span></div>
+
+  <!-- 1. What we taught it with -->
+  <div class="stats types">
+    <div class="stat"><div class="big">230</div><div class="label">demonstrations, about 62 minutes of us moving the arm by hand</div></div>
+    <div class="stat"><div class="big">145</div><div class="label">drop in green</div></div>
+    <div class="stat"><div class="big">46</div><div class="label">drop in pink</div></div>
+    <div class="stat"><div class="big">10</div><div class="label">turn 90°</div></div>
+  </div>
+  <p class="chartslot"><b>To check:</b> 145 + 46 + 10 = 201. The other 29 are "Grip Master", pick-up-and-put-back
+    practice. Fold them into a type, show them as a fourth tile, or keep them in the 230 only?</p>
+
+  <!-- 2. The finding -->
+  <section class="panel">
+    <h2>Longer demos, smaller datasets</h2>
+    <p>Our first demonstrations were fast and twitchy. With each new version we moved the arm more
+      slowly and smoothly, and recorded fewer demos. The arm covered the same ground each time, but
+      over three times as long, and with two thirds less jerk. Smoother movement meant less noise
+      for the model to copy, so it moved more accurately while learning from less data.</p>
+    <div class="stats">
+      <div class="stat"><div class="big">7 s → 24 s</div><div class="label">average demo, first to last version (green; pink 9 s → 23 s)</div></div>
+      <div class="stat"><div class="big">−68%</div><div class="label">jerkiness, first to last version (green; pink −63%)</div></div>
+      <div class="stat"><div class="big">≈ same</div><div class="label">distance travelled by the joints in each demo</div></div>
+    </div>
+    <img class="chart" src="assets/charts/demos.png" alt="Dot plot of every sorting demonstration by dataset version. Demos get longer (green 7 to 24 seconds, pink 9 to 23 seconds) and less jerky (green 1.67 to 0.53, pink 1.47 to 0.55) while the last versions have only 6 and 12 demos.">
+    <p class="chartslot"><b>To check:</b> the data shows slower, smoother demos. "Moved more accurately" is our eye test,
+      not a measurement. Keep it as is, or say "looked more accurate to us"?</p>
+  </section>
+
+  <!-- 3. The three skills -->
+  <section class="panel">
+    <h2>Three skills, trained in isolation</h2>
+    <p>Rather than one model that does everything, each skill is its own policy, trained only on
+      its own demonstrations. Anomalib decides which one runs.</p>
+    <div class="cams">
+      <figure class="cam">
+        <video src="assets/video/rotate_ep00_side.mp4" autoplay muted loop playsinline aria-label="Teleop demonstration: the arm picks up the block, turns it 90 degrees and puts it back"></video>
+        <figcaption><b>Turn 90°</b><span class="n">shows the next face to the camera · 10 demos</span></figcaption>
+      </figure>
+      <figure class="cam">
+        <video src="assets/video/green_ep00_top.mp4" autoplay muted loop playsinline aria-label="Teleop demonstration: the arm drops the block in the green bowl"></video>
+        <figcaption><b>Drop in green</b><span class="n">good blocks · 145 demos</span></figcaption>
+      </figure>
+      <figure class="cam">
+        <video src="assets/video/pink_ep00_side.mp4" autoplay muted loop playsinline aria-label="Teleop demonstration: the arm drops the block in the pink bowl"></video>
+        <figcaption><b>Drop in pink</b><span class="n">defects · 46 demos</span></figcaption>
+      </figure>
+    </div>
+    <p class="src">Videos are demonstrations we taught the policies with. Placeholder clips: swap for your picks.</p>
+  </section>
+
+  <!-- 4. ACT vs VLA -->
+  <div class="split">
+    <section class="panel">
+      <h2>ACT</h2>
+      <p>Action Chunking Transformer: a small model that watches the cameras and joint angles and
+        predicts the next chunk of movement (about 3 seconds) in one go.</p>
+      <ul>
+        <li>Learns from tens of demos</li>
+        <li>Trains in minutes</li>
+        <li>Smooth motion, because it plans in chunks</li>
+      </ul>
+    </section>
+    <section class="panel">
+      <h2>VLA</h2>
+      <p>Vision-Language-Action model: a large model pretrained on images and text, fine-tuned to
+        turn a camera view and a written instruction into movement.</p>
+      <ul>
+        <li>One model for many tasks</li>
+        <li>Takes instructions in plain language</li>
+        <li>Brings general knowledge from pretraining</li>
+      </ul>
+    </section>
+  </div>
+  <section class="panel" style="margin-top:16px">
+    <h2>Our choice: ACT</h2>
+    <p>With 6 to 61 demos per dataset, we needed a model that learns quickly from very little.
+      ACT was built for exactly that: its authors taught real tasks from only 10 minutes of
+      demonstrations. It let us record, train and try again within the hackathon.</p>
+  </section>
+</main>
+<script src="assets/retro.js"></script>
+</body>
+</html>

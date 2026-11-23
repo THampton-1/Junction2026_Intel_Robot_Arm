@@ -229,3 +229,12 @@ details p, details ul { font-size: 13px; }
 .film { aspect-ratio: 16 / 9; border: 2px inset rgba(255,255,255,.5); box-shadow: 3px 3px 0 var(--blue-dark); background: #000; }
 .film iframe { display: block; width: 100%; height: 100%; border: 0; }
 .filmlink { font-size: 12px; margin: 8px 0 0; }
+
+/* ---- Imitation Learning page ---- */
+
+/* Skill cards reuse the camera cards, with a looping video in place of the still */
+.cam video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+.cam figcaption b { display: block; color: var(--yellow); font-size: 16px; }
+/* Headline tile plus three narrower per-type tiles, all on one row */
+.stats.types .stat { flex: 1 1 110px; }
+.stats.types .stat:first-child { flex: 2 1 220px; }
